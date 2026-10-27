@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LabPulse.DAL\LabPulse.DAL.csproj" />
+  </ItemGroup>
+
 </Project>
