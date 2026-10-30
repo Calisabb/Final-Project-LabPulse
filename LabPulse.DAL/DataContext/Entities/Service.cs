@@ -4,6 +4,8 @@ namespace LabPulse.DAL.DataContext.Entities;
 public class Service : BaseEntity
 {
     public string Name { get; set; } = null!;
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
     public string Host { get; set; } = null!;
     public int Port { get; set; }
     public CheckType CheckType { get; set; }

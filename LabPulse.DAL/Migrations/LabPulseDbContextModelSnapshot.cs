@@ -98,7 +98,7 @@ namespace LabPulse.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("ResolvedAt")
+                    b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("ServiceId")
@@ -169,6 +169,10 @@ namespace LabPulse.DAL.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("HealthPath")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -177,6 +181,10 @@ namespace LabPulse.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsMonitoringEnabled")
                         .HasColumnType("bit");
