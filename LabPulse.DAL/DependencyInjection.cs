@@ -14,6 +14,11 @@ public static class DependencyInjection
         services.AddDbContext<LabPulseDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("Default")));
         services.AddScoped(typeof(IRepositoryAsync<>), typeof(RepositoryAsync<>));
+        services.AddScoped<ICategoryRepositoryAsync, CategoryRepositoryAsync>();
+        services.AddScoped<IRunbookRepositoryAsync, RunbookRepositoryAsync>();
+        services.AddScoped<IServiceRepositoryAsync, ServiceRepositoryAsync>();
+        services.AddScoped<IHealthLogRepositoryAsync, HealthLogRepositoryAsync>();
+        services.AddScoped<IIncidentRepositoryAsync, IncidentRepositoryAsync>();
         return services;
     }
 }
