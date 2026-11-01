@@ -32,7 +32,7 @@ public class CategoryService : ICategoryService
 
     public async Task DeleteAsync(int id)
     {
-        if (!await _serviceRepository.ExistsAsync(s => s.CategoryId == id))
+        if (await _serviceRepository.ExistsAsync(s => s.CategoryId == id))
         {
             throw new ConflictException("Category has services and cannot be deleted.");
         }
