@@ -47,6 +47,36 @@ namespace LabPulse.DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "#3B82F6",
+                            CreatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Dev Environment"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "#10B981",
+                            CreatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Databases"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "#F59E0B",
+                            CreatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Media"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "#8B5CF6",
+                            CreatedAt = new DateTime(2026, 10, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Network Gateways"
+                        });
                 });
 
             modelBuilder.Entity("LabPulse.DAL.DataContext.Entities.HealthLog", b =>
