@@ -6,7 +6,7 @@ namespace LabPulse.DAL.Repositories.Contracts;
 public interface IRepositoryAsync<T> where T : BaseEntity
 {
     Task<List<T>> GetAllAsync();
-    Task<T?> GetByIdASync();
+    Task<T?> GetByIdAsync(int id);
     Task AddAsync(T entity);
     void Update(T entity);
     Task<bool> Delete(int id);
