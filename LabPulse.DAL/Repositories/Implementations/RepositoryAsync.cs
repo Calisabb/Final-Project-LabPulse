@@ -49,18 +49,12 @@ public class RepositoryAsync<T> : IRepositoryAsync<T> where T : BaseEntity
         return entities;
     }
 
-    public async Task<T?> GetByIdASync(int id)
+    public async Task<T?> GetByIdAsync(int id)
     {
         return await _dbSet.FindAsync(id);
     }
     public void Update(T entity)
     {
         _dbSet.Update(entity);
-    }
-
-    public async Task<T?> GetByIdASync()
-    {
-        var entity = await _dbSet.FindAsync();
-        return entity;
     }
 }
