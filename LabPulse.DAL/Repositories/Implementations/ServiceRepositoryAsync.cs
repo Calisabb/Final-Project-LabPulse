@@ -16,9 +16,9 @@ public class ServiceRepositoryAsync : RepositoryAsync<Service>, IServiceReposito
     {
         var query = _dbSet.Include(s => s.Category).AsNoTracking().AsQueryable();
         if (status.HasValue)
-            query = query.Where(s => s.ServiceStatus == status);
+            query = query.Where(s => s.ServiceStatus == status.Value);
         if (categoryId.HasValue)
-            query = query.Where(s => s.CategoryId == categoryId);
+            query = query.Where(s => s.CategoryId == categoryId.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(s => s.Name.Contains(search) || (s.Description != null && s.Description.Contains(search)));
@@ -31,6 +31,8 @@ public class ServiceRepositoryAsync : RepositoryAsync<Service>, IServiceReposito
         var services = await _dbSet.Include(s => s.Category)
             .Include(s => s.Incidents)
             .Include(s => s.Runbooks)
+            .AsSplitQuery()
+            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == id);
         return services;
     }
