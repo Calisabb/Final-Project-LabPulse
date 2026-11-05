@@ -10,6 +10,7 @@ namespace LabPulse.BLL
         {
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
+            services.AddScoped<IRunbookService, RunbookService>();
             return services;
         }
     }
