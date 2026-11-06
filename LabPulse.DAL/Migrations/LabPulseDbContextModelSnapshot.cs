@@ -219,7 +219,7 @@ namespace LabPulse.DAL.Migrations
                     b.Property<bool>("IsMonitoringEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastCheked")
+                    b.Property<DateTime?>("LastCheckedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("LastResponceTimeMs")
@@ -238,6 +238,9 @@ namespace LabPulse.DAL.Migrations
 
                     b.Property<int>("TimeoutMs")
                         .HasColumnType("int");
+
+                    b.Property<bool>("UseHttps")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

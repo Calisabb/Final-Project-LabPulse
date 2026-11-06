@@ -13,6 +13,7 @@ public static class ServiceMappings
             Name = service.Name,
             Host = service.Host,
             Port = service.Port,
+            UseHttps = service.UseHttps,
             CheckType = service.CheckType,
             HealthPath = service.HealthPath,
             TimeoutMs = service.TimeoutMs,
@@ -35,6 +36,7 @@ public static class ServiceMappings
             Name = dto.Name.Trim(),
             Host = dto.Host.Trim(),
             Port = dto.Port,
+            UseHttps = dto.UseHttps,
             CheckType = dto.CheckType,
             HealthPath = dto.HealthPath,
             TimeoutMs = dto.TimeoutMs,
@@ -50,6 +52,7 @@ public static class ServiceMappings
         service.Name = dto.Name.Trim();
         service.Host = dto.Host.Trim();
         service.Port = dto.Port;
+        service.UseHttps = dto.UseHttps;
         service.CheckType = dto.CheckType;
         service.HealthPath = dto.HealthPath;
         service.TimeoutMs = dto.TimeoutMs;

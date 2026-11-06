@@ -8,6 +8,7 @@ public class ServiceDto
     public string Name { get; set; } = null!;
     public string Host { get; set; } = null!;
     public int Port { get; set; }
+    public bool UseHttps { get; set; }
     public CheckType CheckType { get; set; }
     public string? HealthPath { get; set; }
     public int TimeoutMs { get; set; }
