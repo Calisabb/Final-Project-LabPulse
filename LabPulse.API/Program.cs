@@ -1,3 +1,5 @@
+using LabPulse.BLL;
+using LabPulse.DAL;
 
 namespace LabPulse.API
 {
@@ -12,7 +14,8 @@ namespace LabPulse.API
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
-
+            builder.Services.AddLabPulseDAL(builder.Configuration);
+            builder.Services.AddLabPulseBLL();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
