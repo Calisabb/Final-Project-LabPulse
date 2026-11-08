@@ -3,7 +3,7 @@ using LabPulse.DAL.DataContext.Entities;
 
 namespace LabPulse.BLL.Mapping;
 
-public static class RunbookMappings
+internal static class RunbookMappings
 {
     public static RunbookDto ToDto(this Runbook runbook)
     {

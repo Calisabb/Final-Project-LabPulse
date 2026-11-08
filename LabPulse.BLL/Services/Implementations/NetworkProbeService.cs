@@ -7,7 +7,7 @@ using System.Net.Sockets;
 
 namespace LabPulse.BLL.Services.Implementations;
 
-public class NetworkProbeService : INetworkProbeService
+internal class NetworkProbeService : INetworkProbeService
 {
     private readonly IHttpClientFactory _httpFactory;
 

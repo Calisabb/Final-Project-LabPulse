@@ -3,7 +3,7 @@ using LabPulse.DAL.DataContext.Entities;
 
 namespace LabPulse.BLL.Mapping;
 
-public static class IncidentMappings
+internal static class IncidentMappings
 {
     public static IncidentDto ToDto(this Incident i)
     {
