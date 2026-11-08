@@ -11,12 +11,16 @@ public class IncidentRepositoryAsync : RepositoryAsync<Incident>, IIncidentRepos
     {
     }
 
-    public async Task<List<Incident>> GetAllWithService(bool onlyOpen)
+    public async Task<List<Incident>> GetAllWithServiceAsync(bool onlyOpen, int? serviceId = null)
     {
         var incidents = _dbSet.AsNoTracking().Include(i => i.Service).AsQueryable();
         if (onlyOpen)
         {
             incidents = incidents.Where(i => i.ResolvedAt == null);
+        }
+        if (serviceId.HasValue)
+        {
+            incidents = incidents.Where(i => i.ServiceId == serviceId.Value);
         }
         return await incidents.OrderByDescending(i => i.StartedAt).ToListAsync();
     }

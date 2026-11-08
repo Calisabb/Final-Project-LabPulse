@@ -11,6 +11,7 @@ namespace LabPulse.BLL
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
             services.AddScoped<IRunbookService, RunbookService>();
+            services.AddScoped<IIncidentService, IncidentService>();
             return services;
         }
     }
