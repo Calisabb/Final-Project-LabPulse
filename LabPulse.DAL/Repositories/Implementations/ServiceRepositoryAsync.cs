@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class ServiceRepositoryAsync : RepositoryAsync<Service>, IServiceRepositoryAsync
+internal class ServiceRepositoryAsync : RepositoryAsync<Service>, IServiceRepositoryAsync
 {
     public ServiceRepositoryAsync(LabPulseDbContext context) : base(context)
     {

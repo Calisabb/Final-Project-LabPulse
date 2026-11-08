@@ -4,7 +4,7 @@ using LabPulse.DAL.Repositories.Contracts;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class CategoryRepositoryAsync : RepositoryAsync<Category>, ICategoryRepositoryAsync
+internal class CategoryRepositoryAsync : RepositoryAsync<Category>, ICategoryRepositoryAsync
 {
     public CategoryRepositoryAsync(LabPulseDbContext context) : base(context)
     {

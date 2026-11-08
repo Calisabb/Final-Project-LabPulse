@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class IncidentRepositoryAsync : RepositoryAsync<Incident>, IIncidentRepositoryAsync
+internal class IncidentRepositoryAsync : RepositoryAsync<Incident>, IIncidentRepositoryAsync
 {
     public IncidentRepositoryAsync(LabPulseDbContext context) : base(context)
     {

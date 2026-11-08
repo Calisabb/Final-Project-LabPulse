@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class RunbookRepositoryAsync : RepositoryAsync<Runbook>, IRunbookRepositoryAsync
+internal class RunbookRepositoryAsync : RepositoryAsync<Runbook>, IRunbookRepositoryAsync
 {
     public RunbookRepositoryAsync(LabPulseDbContext context) : base(context)
     {
