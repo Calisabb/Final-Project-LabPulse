@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class HealthLogRepositoryAsync : IHealthLogRepositoryAsync
+internal class HealthLogRepositoryAsync : IHealthLogRepositoryAsync
 {
     private readonly LabPulseDbContext _dbContext;
     public HealthLogRepositoryAsync(LabPulseDbContext dbContext)

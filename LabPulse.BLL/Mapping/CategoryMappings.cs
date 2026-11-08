@@ -3,7 +3,7 @@ using LabPulse.DAL.DataContext.Entities;
 
 namespace LabPulse.BLL.Mapping;
 
-public static class CategoryMappings
+internal static class CategoryMappings
 {
     public static CategoryDto ToDto(this Category category)
     {

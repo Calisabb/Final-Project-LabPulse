@@ -6,7 +6,7 @@ using LabPulse.DAL.Repositories.Contracts;
 
 namespace LabPulse.BLL.Services.Implementations;
 
-public class CategoryService : ICategoryService
+internal class CategoryService : ICategoryService
 {
     private readonly ICategoryRepositoryAsync _categoryRepository;
     private readonly IServiceRepositoryAsync _serviceRepository;

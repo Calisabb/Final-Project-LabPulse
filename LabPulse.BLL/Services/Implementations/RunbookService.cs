@@ -6,7 +6,7 @@ using LabPulse.DAL.Repositories.Contracts;
 
 namespace LabPulse.BLL.Services.Implementations;
 
-public class RunbookService : IRunbookService
+internal class RunbookService : IRunbookService
 {
     private readonly IRunbookRepositoryAsync _runbooks;
     private readonly IServiceRepositoryAsync _services;

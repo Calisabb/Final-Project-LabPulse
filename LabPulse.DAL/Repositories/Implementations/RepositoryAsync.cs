@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LabPulse.DAL.Repositories.Implementations;
 
-public class RepositoryAsync<T> : IRepositoryAsync<T> where T : BaseEntity
+internal class RepositoryAsync<T> : IRepositoryAsync<T> where T : BaseEntity
 {
     protected readonly LabPulseDbContext _dbContext;
     protected readonly DbSet<T> _dbSet;

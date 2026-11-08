@@ -3,7 +3,7 @@ using LabPulse.DAL.DataContext.Entities;
 
 namespace LabPulse.BLL.Mapping;
 
-public static class ServiceMappings
+internal static class ServiceMappings
 {
     public static ServiceDto ToDto(this Service service)
     {
