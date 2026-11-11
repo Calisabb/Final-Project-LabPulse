@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LabPulse.BLL
 {
-    public static class DependecyInjection
+    public static class DependencyInjection
     {
         public static IServiceCollection AddLabPulseBLL(this IServiceCollection services)
         {
@@ -12,6 +12,8 @@ namespace LabPulse.BLL
             services.AddScoped<IServiceCatalogService, ServiceCatalogService>();
             services.AddScoped<IRunbookService, RunbookService>();
             services.AddScoped<IIncidentService, IncidentService>();
+            services.AddScoped<IHealthCheckService, HealthCheckService>();
+            services.AddScoped<INetworkProbeService, NetworkProbeService>();
             return services;
         }
     }
