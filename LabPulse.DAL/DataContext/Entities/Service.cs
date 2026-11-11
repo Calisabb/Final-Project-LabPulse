@@ -15,7 +15,7 @@ public class Service : BaseEntity
     public bool IsMonitoringEnabled { get; set; } = true;
     public ServiceStatus ServiceStatus { get; set; }
     public DateTime? LastCheckedAt { get; set; }
-    public int? LastResponceTimeMs { get; set; }
+    public int? LastResponseTimeMs { get; set; }
 
     public Category Category { get; set; } = null!;
     public int CategoryId { get; set; }

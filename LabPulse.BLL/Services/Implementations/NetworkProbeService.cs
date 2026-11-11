@@ -43,7 +43,7 @@ internal class NetworkProbeService : INetworkProbeService
             return new ProbeResultDto
             {
                 IsOnline = ok,
-                ResponceTimeMs = (int)sw.ElapsedMilliseconds,
+                ResponseTimeMs = (int)sw.ElapsedMilliseconds,
                 StatusCode = code,
                 ErrorMessage = ok ? null : $"HTTP {code}"
             };
@@ -70,7 +70,7 @@ internal class NetworkProbeService : INetworkProbeService
             return new ProbeResultDto
             {
                 IsOnline = true,
-                ResponceTimeMs = (int)sw.ElapsedMilliseconds
+                ResponseTimeMs = (int)sw.ElapsedMilliseconds
             };
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
