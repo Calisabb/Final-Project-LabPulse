@@ -22,7 +22,7 @@ internal static class ServiceMappings
             Icon = service.Icon,
             ServiceStatus = service.ServiceStatus,
             LastCheckedAt = service.LastCheckedAt,
-            LastResponceTimeMs = service.LastResponceTimeMs,
+            LastResponceTimeMs = service.LastResponseTimeMs,
             CategoryId = service.CategoryId,
             CategoryName = service.Category.Name,
             CategoryColor = service.Category.Color

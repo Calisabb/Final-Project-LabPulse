@@ -87,7 +87,7 @@ namespace LabPulse.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<DateTime?>("CheckedAt")
+                    b.Property<DateTime>("CheckedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ErrorMessage")
@@ -97,7 +97,7 @@ namespace LabPulse.DAL.Migrations
                     b.Property<bool>("IsOnline")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("ResponceTimeMs")
+                    b.Property<int?>("ResponseTimeMs")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
@@ -222,7 +222,7 @@ namespace LabPulse.DAL.Migrations
                     b.Property<DateTime?>("LastCheckedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("LastResponceTimeMs")
+                    b.Property<int?>("LastResponseTimeMs")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
