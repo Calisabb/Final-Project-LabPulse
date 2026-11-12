@@ -14,6 +14,16 @@ namespace LabPulse.BLL
             services.AddScoped<IIncidentService, IncidentService>();
             services.AddScoped<IHealthCheckService, HealthCheckService>();
             services.AddScoped<INetworkProbeService, NetworkProbeService>();
+            services.AddScoped<IHealthLogService, HealthLogService>();
+
+            services.AddHttpClient("probe")
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback =
+                        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                    AllowAutoRedirect = false
+                });
+
             return services;
         }
     }
