@@ -1,4 +1,5 @@
 ﻿using LabPulse.DAL.DataContext.Entities;
+using LabPulse.DAL.Repositories.Models;
 
 namespace LabPulse.DAL.Repositories.Contracts;
 
@@ -9,4 +10,5 @@ public interface IHealthLogRepositoryAsync
     Task<List<HealthLog>> GetLastAsync(int serviceId, int count);
     Task<int> DeleteOlderThanAsync(DateTime cutoffDate);
     Task<int> SaveChangesAsync();
+    Task<List<DailyHealthStat>> GetDailyStatsAsync(int serviceId, DateTime from);
 }

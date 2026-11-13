@@ -2,11 +2,13 @@
 using LabPulse.BLL.Mapping;
 using LabPulse.BLL.Services.Contracts;
 using LabPulse.DAL.Repositories.Contracts;
+using LabPulse.DAL.Repositories.Models;
 
 namespace LabPulse.BLL.Services.Implementations;
 
 internal class HealthLogService : IHealthLogService
 {
+    private readonly int MaxUptimeDays = 90;
     private readonly IServiceRepositoryAsync _services;
     private readonly IHealthLogRepositoryAsync _healthLogs;
     private const int MaxLogsPerRequest = 1000;
@@ -43,6 +45,40 @@ internal class HealthLogService : IHealthLogService
 
         return (await _healthLogs.GetLastAsync(serviceId, count))
             .Select(l => l.ToDto())
+            .ToList();
+    }
+
+    public async Task<List<UptimeDayDto>> GetUptimeAsync(int serviceId, int days = 30)
+    {
+        if (days <= 0)
+            throw new ArgumentException($"Days {days} must be greater than zero.");
+        if (days > MaxUptimeDays)
+            throw new ArgumentException($"Days {days} must be less than or equal to {MaxUptimeDays}.");
+
+        if (!await _services.ExistsAsync(s => s.Id == serviceId))
+            throw new KeyNotFoundException($"Service with id {serviceId} not found.");
+
+        var from = DateTime.UtcNow.Date.AddDays(-(days-1));
+        var dailyStats = await _healthLogs.GetDailyStatsAsync(serviceId, from);
+        var dict = dailyStats.ToDictionary(s => s.Date, s => s);
+
+        for (int i = 0; i < days; i++)
+        {
+            var date = from.AddDays(i);
+            if (!dict.ContainsKey(date))
+            {
+                dict[date] = new DailyHealthStat(date, 0, 0);
+            }
+        }
+        return dict.Values
+            .OrderBy(s => s.Date)
+            .Select(s => new UptimeDayDto
+            {
+                Date = DateOnly.FromDateTime(s.Date),
+                TotalChecks = s.Total,
+                OnlineChecks = s.Online,
+                UptimePercentage = s.Total > 0 ? (double)s.Online / s.Total * 100 : 0
+            })
             .ToList();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using LabPulse.DAL.DataContext;
 using LabPulse.DAL.DataContext.Entities;
 using LabPulse.DAL.Repositories.Contracts;
+using LabPulse.DAL.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace LabPulse.DAL.Repositories.Implementations;
@@ -31,7 +32,7 @@ internal class HealthLogRepositoryAsync : IHealthLogRepositoryAsync
             .Where(h => h.CheckedAt < cutoffDate)
             .ExecuteDeleteAsync();
     }
-            
+
 
     public async Task<List<HealthLog>> GetLastAsync(int serviceId, int count)
     {
@@ -45,5 +46,19 @@ internal class HealthLogRepositoryAsync : IHealthLogRepositoryAsync
     public Task<int> SaveChangesAsync()
     {
         return _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<DailyHealthStat>> GetDailyStatsAsync(int serviceId, DateTime from)
+    {
+        return await _dbContext.HealthLogs
+            .Where(h => h.ServiceId == serviceId && h.CheckedAt >= from)
+            .GroupBy(h => h.CheckedAt.Date)
+            .Select(g => new DailyHealthStat(
+                Date: g.Key,
+                Total: g.Count(),
+                Online: g.Count(h => h.IsOnline)
+            ))
+            .OrderBy(s => s.Date)
+            .ToListAsync();
     }
 }
