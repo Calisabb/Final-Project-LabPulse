@@ -1,5 +1,8 @@
+using LabPulse.API.Handlers;
 using LabPulse.BLL;
 using LabPulse.DAL;
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 namespace LabPulse.API
 {
@@ -9,26 +12,30 @@ namespace LabPulse.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.AddControllers()
+                .AddJsonOptions(o =>
+                    o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails();
+
             builder.Services.AddLabPulseDAL(builder.Configuration);
             builder.Services.AddLabPulseBLL();
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            app.UseExceptionHandler();
+
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+                app.MapScalarApiReference();
+
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();
