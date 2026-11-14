@@ -1,3 +1,6 @@
 <Solution>
   <Project Path="LabPulse.Admin/LabPulse.Admin.csproj" />
+  <Project Path="LabPulse.API/LabPulse.API.csproj" />
+  <Project Path="LabPulse.BLL/LabPulse.BLL.csproj" />
+  <Project Path="LabPulse.DAL/LabPulse.DAL.csproj" />
 </Solution>
