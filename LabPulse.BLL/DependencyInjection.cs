@@ -15,6 +15,7 @@ namespace LabPulse.BLL
             services.AddScoped<IHealthCheckService, HealthCheckService>();
             services.AddScoped<INetworkProbeService, NetworkProbeService>();
             services.AddScoped<IHealthLogService, HealthLogService>();
+            services.AddScoped<IBackupService, BackupService>();
 
             services.AddHttpClient("probe")
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
