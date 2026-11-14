@@ -203,10 +203,16 @@ internal class BackupService : IBackupService
                 $"Service '{s.Name}': port must be 1-65535.");
             Require(Enum.IsDefined(s.CheckType),
                 $"Service '{s.Name}': unknown check type.");
-            Require(s.TimeoutMs is > 0 and <= 60000,
-                $"Service '{s.Name}': timeout must be 1-60000 ms.");
+            Require(s.TimeoutMs is >= 500 and <= 30000,
+                $"Service '{s.Name}': timeout must be 500-30000 ms.");
             Require(!string.IsNullOrWhiteSpace(s.CategoryName),
                 $"Service '{s.Name}': category is required.");
+            Require(s.HealthPath == null || s.HealthPath.Length <= 255,
+                $"Service '{s.Name}': health path is too long (max 255).");
+            Require(s.Description == null || s.Description.Length <= 500,
+                $"Service '{s.Name}': description is too long (max 500).");
+            Require(s.Icon == null || s.Icon.Length <= 50,
+                $"Service '{s.Name}': icon is too long (max 50).");
 
             foreach (var r in s.Runbooks)
             {
@@ -214,6 +220,10 @@ internal class BackupService : IBackupService
                     $"Service '{s.Name}': runbook title is required (max 150 characters).");
                 Require(!string.IsNullOrWhiteSpace(r.CommandText),
                     $"Service '{s.Name}': runbook '{r.Title}' has no command text.");
+                Require(r.CommandText.Length <= 500,
+                    $"Service '{s.Name}': runbook '{r.Title}' command is too long (max 500).");
+                Require(r.Notes == null || r.Notes.Length <= 500,
+                    $"Service '{s.Name}': runbook '{r.Title}' notes are too long (max 500).");
                 Require(Enum.IsDefined(r.ShellType),
                     $"Service '{s.Name}': runbook '{r.Title}' has unknown shell type.");
             }
