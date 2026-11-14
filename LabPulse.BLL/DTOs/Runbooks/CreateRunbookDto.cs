@@ -7,7 +7,7 @@ public class CreateRunbookDto
 {
     [Required, MaxLength(150)] public string Title { get; set; } = null!;
     [Range(1, int.MaxValue)] public int ServiceId { get; set; }
-    public ShellType ShellType { get; set; }
+    [EnumDataType(typeof(ShellType))] public ShellType ShellType { get; set; }
     [Required, MaxLength(500)] public string CommandText { get; set; } = null!;
-    [MaxLength(500)] public string? Notes { get; set; } = null!;
+    [MaxLength(500)] public string? Notes { get; set; }
 }
