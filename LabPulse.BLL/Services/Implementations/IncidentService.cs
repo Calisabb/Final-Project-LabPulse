@@ -22,7 +22,7 @@ internal class IncidentService : IIncidentService
         return incidents.Select(i=>i.ToDto()).ToList();
     }
 
-    public async Task<List<IncidentDto>?> GetByServiceAsync(int serviceId)
+    public async Task<List<IncidentDto>> GetByServiceAsync(int serviceId)
     {
         if (!await _services.ExistsAsync(s=>s.Id == serviceId))
             throw new KeyNotFoundException($"Service with id {serviceId} not found.");
