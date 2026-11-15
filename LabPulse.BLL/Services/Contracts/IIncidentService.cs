@@ -5,5 +5,5 @@ namespace LabPulse.BLL.Services.Contracts;
 public interface IIncidentService
 {
     Task<List<IncidentDto>> GetAllAsync(bool onlyOpen);
-    Task<List<IncidentDto>?> GetByServiceAsync(int serviceId);
+    Task<List<IncidentDto>> GetByServiceAsync(int serviceId);
 }

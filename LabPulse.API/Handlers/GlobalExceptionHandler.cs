@@ -18,6 +18,9 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
+            return true;
+
         var (status, title) = exception switch
         {
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
