@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -22,7 +23,32 @@ namespace LabPulse.API
                 .AddJsonOptions(o =>
                     o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-            builder.Services.AddOpenApi();
+            builder.Services.AddOpenApi(options =>
+            {
+                options.AddDocumentTransformer((document, context, cancellationToken) =>
+                {
+                    document.Components ??= new OpenApiComponents();
+                    document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+                    document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        Description = "JWT Authorization header using the Bearer scheme."
+                    };
+
+                    var securitySchemeRef = new OpenApiSecuritySchemeReference("Bearer");
+                    var requirement = new OpenApiSecurityRequirement
+                    {
+                        [securitySchemeRef] = new List<string>()
+                    };
+
+                    document.Security ??= new List<OpenApiSecurityRequirement>();
+                    document.Security.Add(requirement);
+
+                    return Task.CompletedTask;
+                });
+            });
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
             builder.Services.AddProblemDetails();
 
