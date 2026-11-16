@@ -1,4 +1,4 @@
-﻿using LabPulse.BLL.Services.Contracts;
+using LabPulse.BLL.Services.Contracts;
 using LabPulse.BLL.Services.Implementations;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +16,8 @@ namespace LabPulse.BLL
             services.AddScoped<INetworkProbeService, NetworkProbeService>();
             services.AddScoped<IHealthLogService, HealthLogService>();
             services.AddScoped<IBackupService, BackupService>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
+            services.AddScoped<IAuthService, AuthService>();
 
             services.AddHttpClient("probe")
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
