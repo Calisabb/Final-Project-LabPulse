@@ -1,4 +1,4 @@
-﻿using LabPulse.BLL.Exceptions;
+using LabPulse.BLL.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,6 +23,7 @@ public class GlobalExceptionHandler : IExceptionHandler
 
         var (status, title) = exception switch
         {
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
             ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
             ArgumentException => (StatusCodes.Status400BadRequest, "Bad Request"),
