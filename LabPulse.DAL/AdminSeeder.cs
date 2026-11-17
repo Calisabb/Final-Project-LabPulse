@@ -72,6 +72,4 @@ public static class AdminSeeder
             }
         }
     }
-
-    public static Task SeedAdminAsync(IServiceProvider serviceProvider) => SeedAsync(serviceProvider);
 }
