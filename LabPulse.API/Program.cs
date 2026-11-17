@@ -61,23 +61,7 @@ namespace LabPulse.API
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
-                {
-                    var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
-                    var key = jwtSection["Key"];
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = jwtSection["Issuer"],
-                        ValidateAudience = true,
-                        ValidAudience = jwtSection["Audience"],
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = !string.IsNullOrEmpty(key)
-                            ? new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-                            : null,
-                        ClockSkew = TimeSpan.FromMinutes(1)
-                    };
-
+                {     
                     options.Events = new JwtBearerEvents
                     {
                         OnChallenge = async context =>
