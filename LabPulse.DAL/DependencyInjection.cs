@@ -1,6 +1,8 @@
-﻿using LabPulse.DAL.DataContext;
+using LabPulse.DAL.DataContext;
+using LabPulse.DAL.DataContext.Entities;
 using LabPulse.DAL.Repositories.Contracts;
 using LabPulse.DAL.Repositories.Implementations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,11 @@ public static class DependencyInjection
     {
         services.AddDbContext<LabPulseDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("Default")));
+
+        services.AddIdentityCore<User>()
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<LabPulseDbContext>();
+
         services.AddScoped(typeof(IRepositoryAsync<>), typeof(RepositoryAsync<>));
         services.AddScoped<ICategoryRepositoryAsync, CategoryRepositoryAsync>();
         services.AddScoped<IRunbookRepositoryAsync, RunbookRepositoryAsync>();
