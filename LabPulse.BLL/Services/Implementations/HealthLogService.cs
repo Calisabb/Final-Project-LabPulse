@@ -81,4 +81,12 @@ internal class HealthLogService : IHealthLogService
             })
             .ToList();
     }
+
+    public async Task<int> CleanupOldLogsAsync()
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-MaxUptimeDays);
+        var deleted = await _healthLogs.DeleteOlderThanAsync(cutoff);
+        await _healthLogs.SaveChangesAsync();
+        return deleted;
+    }
 }
