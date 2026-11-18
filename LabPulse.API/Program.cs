@@ -1,4 +1,5 @@
 using LabPulse.API.Handlers;
+using LabPulse.API.Workers;
 using LabPulse.BLL;
 using LabPulse.BLL.Options;
 using LabPulse.DAL;
@@ -119,6 +120,7 @@ namespace LabPulse.API
 
             builder.Services.AddLabPulseDAL(builder.Configuration);
             builder.Services.AddLabPulseBLL();
+            builder.Services.AddHostedService<HealthCheckWorker>();
 
             var app = builder.Build();
 
