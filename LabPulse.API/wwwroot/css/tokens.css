@@ -1,0 +1,95 @@
+/* LabPulse Design Tokens: Frosted Glass & Night Control Room */
+:root {
+  /* 1. Base Night Control Room Palette (Deep Oceanic / Maritime Operations) */
+  --color-abyss: #070d14;
+  --color-hull: #0e1722;
+  --color-bulkhead: #162232;
+  --color-console: #1f3044;
+  --color-beacon-cyan: #06b6d4;
+  --color-sonar-teal: #14b8a6;
+
+  /* 2. Frosted Glass Surfaces (Translucent + Specular Highlights) */
+  --glass-header: rgba(11, 20, 31, 0.72);
+  --glass-card: rgba(15, 27, 41, 0.62);
+  --glass-card-hover: rgba(22, 38, 56, 0.75);
+  --glass-panel: rgba(12, 22, 34, 0.86);
+  --glass-modal: rgba(10, 18, 29, 0.92);
+  --glass-toast: rgba(14, 24, 38, 0.88);
+  --glass-input: rgba(8, 16, 26, 0.65);
+
+  /* Specular border & highlight */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-border-focus: rgba(6, 182, 212, 0.65);
+  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+
+  /* 3. Semantic Signal Colors (Maritime / Control Room Status) */
+  --status-online: #10b981;
+  --status-online-glow: rgba(16, 185, 129, 0.32);
+  --status-online-bg: rgba(16, 185, 129, 0.12);
+  --status-online-border: rgba(16, 185, 129, 0.35);
+
+  --status-offline: #f43f5e;
+  --status-offline-glow: rgba(244, 63, 94, 0.45);
+  --status-offline-bg: rgba(244, 63, 94, 0.14);
+  --status-offline-border: rgba(244, 63, 94, 0.45);
+
+  --status-unknown: #64748b;
+  --status-unknown-bg: rgba(100, 116, 139, 0.12);
+  --status-unknown-border: rgba(100, 116, 139, 0.30);
+
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+
+  /* 4. Text Contrast (WCAG AA Compliant > 4.5:1 against dark glass) */
+  --text-bright: #f8fafc;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* 5. Typography */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* 6. Hierarchy Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-panel: 18px;
+  --radius-full: 9999px;
+
+  /* 7. Blur Levels */
+  --blur-header: blur(14px) saturate(160%);
+  --blur-card: blur(12px) saturate(150%);
+  --blur-panel: blur(20px) saturate(180%);
+  --blur-modal: blur(24px) saturate(180%);
+
+  /* 8. Shadows */
+  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  --shadow-panel: -12px 0 40px -4px rgba(0, 0, 0, 0.65);
+  --shadow-modal: 0 24px 64px -8px rgba(0, 0, 0, 0.75);
+  --shadow-toast: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+
+  /* 9. Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* 10. Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 11. Z-Indices */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-panel: 500;
+  --z-backdrop: 900;
+  --z-modal: 1000;
+  --z-toast: 1100;
+}
