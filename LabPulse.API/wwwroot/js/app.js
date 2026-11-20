@@ -46,6 +46,11 @@ document.addEventListener('alpine:init', () => {
     selectedCategory: null, // null for 'All'
     selectedStatus: 'all',  // 'all' | 'online' | 'offline'
 
+    // Service Health Checks State
+    checkingServiceIds: {},
+    lastCheckErrors: {},
+    isCheckingAll: false,
+
     // Service Modal State (Create / Edit)
     isServiceModalOpen: false,
     isEditMode: false,
@@ -181,13 +186,11 @@ document.addEventListener('alpine:init', () => {
       try {
         const data = await window.Api.getServices();
         if (Array.isArray(data)) {
-          // Merge updates without full UI flicker
           const map = new Map(data.map(s => [s.id, s]));
           this.services = this.services.map(existing => {
             const fresh = map.get(existing.id);
             return fresh ? { ...existing, ...fresh } : existing;
           });
-          // Add any new services
           const existingIds = new Set(this.services.map(s => s.id));
           for (const s of data) {
             if (!existingIds.has(s.id)) {
@@ -244,7 +247,6 @@ document.addEventListener('alpine:init', () => {
       const filtered = this.filteredServices;
       const groups = [];
 
-      // Create a map of categories
       const catMap = new Map();
       this.categories.forEach(c => {
         catMap.set(c.id, {
@@ -253,7 +255,6 @@ document.addEventListener('alpine:init', () => {
         });
       });
 
-      // Default ungrouped category for orphan services if any
       const uncategorized = {
         category: { id: 0, name: 'Uncategorized', color: '#64748b' },
         services: []
@@ -267,7 +268,6 @@ document.addEventListener('alpine:init', () => {
         }
       });
 
-      // Include categories that have matching services, or all categories if no search is active
       catMap.forEach(group => {
         if (group.services.length > 0) {
           groups.push(group);
@@ -285,6 +285,99 @@ document.addEventListener('alpine:init', () => {
       this.searchQuery = '';
       this.selectedCategory = null;
       this.selectedStatus = 'all';
+    },
+
+    /* ------------------- Health Check Actions ------------------- */
+    async checkSingleService(service) {
+      if (!service || !service.id) return;
+      const id = service.id;
+
+      this.checkingServiceIds = { ...this.checkingServiceIds, [id]: true };
+
+      try {
+        const res = await window.Api.checkService(id);
+        const isOnline = res.isOnline !== undefined ? res.isOnline : res.IsOnline;
+        const latency = res.responseTimeMs !== undefined ? res.responseTimeMs : res.ResponseTimeMs;
+        const errMsg = res.errorMessage !== undefined ? res.errorMessage : res.ErrorMessage;
+
+        // Update service in place
+        service.serviceStatus = isOnline ? 'Online' : 'Offline';
+        service.lastResponceTimeMs = latency;
+        service.lastCheckedAt = new Date().toISOString();
+
+        if (!isOnline && errMsg) {
+          this.lastCheckErrors = { ...this.lastCheckErrors, [id]: errMsg };
+        } else {
+          const copy = { ...this.lastCheckErrors };
+          delete copy[id];
+          this.lastCheckErrors = copy;
+        }
+
+        const msg = isOnline
+          ? `${service.name} is online (${window.Format.responseTime(latency)})`
+          : `${service.name} is offline: ${errMsg || 'probe failed'}`;
+        Alpine.store('toasts').show(msg, isOnline ? 'success' : 'error');
+      } catch (err) {
+        Alpine.store('toasts').show(`Check failed for ${service.name}: ${err.message}`, 'error');
+      } finally {
+        const copy = { ...this.checkingServiceIds };
+        delete copy[id];
+        this.checkingServiceIds = copy;
+      }
+    },
+
+    async checkAllServices() {
+      if (this.isCheckingAll) return;
+      this.isCheckingAll = true;
+
+      try {
+        const res = await window.Api.checkAll();
+        const total = res.total ?? res.Total ?? 0;
+        const online = res.online ?? res.Online ?? 0;
+        const offline = res.offline ?? res.Offline ?? 0;
+        const results = res.results ?? res.Results ?? [];
+
+        // Apply results to local services list
+        if (Array.isArray(results) && results.length > 0) {
+          const resMap = new Map();
+          results.forEach(r => {
+            const rId = r.serviceId ?? r.ServiceId;
+            resMap.set(rId, r);
+          });
+
+          this.services.forEach(s => {
+            const probe = resMap.get(s.id);
+            if (probe) {
+              const isOnline = probe.isOnline ?? probe.IsOnline;
+              const latency = probe.responseTimeMs ?? probe.ResponseTimeMs;
+              const errMsg = probe.errorMessage ?? probe.ErrorMessage;
+
+              s.serviceStatus = isOnline ? 'Online' : 'Offline';
+              s.lastResponceTimeMs = latency;
+              s.lastCheckedAt = new Date().toISOString();
+
+              if (!isOnline && errMsg) {
+                this.lastCheckErrors[s.id] = errMsg;
+              } else {
+                delete this.lastCheckErrors[s.id];
+              }
+            }
+          });
+          this.lastCheckErrors = { ...this.lastCheckErrors };
+        } else {
+          await this.refreshServicesSilently();
+        }
+
+        Alpine.store('toasts').show(
+          `Checked ${total} services: ${online} online, ${offline} offline`,
+          offline > 0 ? 'info' : 'success',
+          4500
+        );
+      } catch (err) {
+        Alpine.store('toasts').show(`Bulk check failed: ${err.message}`, 'error');
+      } finally {
+        this.isCheckingAll = false;
+      }
     },
 
     /* ------------------- Service CRUD Modal ------------------- */
@@ -416,7 +509,6 @@ document.addEventListener('alpine:init', () => {
         await this.loadServices();
       } catch (err) {
         if (err.errors && typeof err.errors === 'object') {
-          // Map backend field errors to form fields
           const mapped = {};
           for (const key of Object.keys(err.errors)) {
             const camelKey = key.charAt(0).toLowerCase() + key.slice(1);

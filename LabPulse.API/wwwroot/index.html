@@ -130,6 +130,19 @@
           </div>
 
           <div class="header-actions">
+            <!-- Check All Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="checkAllServices"
+              :disabled="isCheckingAll || loadingServices"
+              aria-label="Probe all monitored services"
+            >
+              <span x-show="isCheckingAll" class="spinner" aria-hidden="true"></span>
+              <span x-text="isCheckingAll ? 'Checking all...' : '⚡ Check all'"></span>
+            </button>
+
+            <!-- Add Service Button -->
             <button type="button" class="btn btn-primary btn-sm" @click="openCreateServiceModal" aria-label="Add monitored service">
               <span>+ Add Service</span>
             </button>
@@ -310,8 +323,24 @@
                         </span>
                       </div>
 
+                      <!-- Probe Error Snippet (if any) -->
+                      <div x-show="lastCheckErrors[service.id]" class="error-snippet" role="alert">
+                        <span x-text="lastCheckErrors[service.id]"></span>
+                      </div>
+
                       <!-- Card Actions -->
                       <div class="card-actions">
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          @click="checkSingleService(service)"
+                          :disabled="checkingServiceIds[service.id]"
+                          aria-label="Probe service status"
+                        >
+                          <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true"></span>
+                          <span x-text="checkingServiceIds[service.id] ? 'Checking...' : '⚡ Check'"></span>
+                        </button>
+
                         <div style="display: flex; gap: var(--space-2);">
                           <button
                             type="button"
