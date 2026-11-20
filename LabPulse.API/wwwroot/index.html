@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070d14">
+  <meta name="description" content="LabPulse - Homelab Service Monitoring & Health Operations Panel">
+  <title>LabPulse · Homelab Operations</title>
+
+  <!-- Local Vendored Stylesheets -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+
+  <!-- Local Vendored Application Scripts -->
+  <script src="vendor/alpine.min.js" defer></script>
+  <script src="js/format.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</head>
+<body x-data="app" class="app-reveal" x-cloak>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <template x-for="toast in $store.toasts.items" :key="toast.id">
+      <div class="toast" :class="'toast-' + toast.type" role="alert">
+        <span x-text="toast.message"></span>
+        <button type="button" class="btn-icon btn-sm" aria-label="Dismiss notification" @click="$store.toasts.remove(toast.id)">
+          &times;
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <!-- Unauthenticated: Frosted Glass Login Screen -->
+  <template x-if="!isAuthenticated">
+    <main class="modal-backdrop" style="position: fixed; inset: 0; background: transparent; z-index: var(--z-sticky);">
+      <div class="modal-dialog" style="max-width: 400px; margin: auto;">
+        <div class="modal-header">
+          <div class="brand-section">
+            <span class="brand-pulse"></span>
+            <span class="brand-logo">LabPulse</span>
+          </div>
+          <span class="telemetry-pill">v1.0 · Ops</span>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="modal-body">
+          <div style="margin-bottom: var(--space-2);">
+            <h1 style="font-size: 1.125rem; margin-bottom: var(--space-1);">Operator sign in</h1>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              Enter credentials to access the homelab monitoring control room.
+            </p>
+          </div>
+
+          <!-- Session Expiry or Notice Alert -->
+          <div x-show="loginMessage" x-transition class="form-error" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); color: #67e8f9; padding: var(--space-3); border-radius: var(--radius-sm);" role="status">
+            <span x-text="loginMessage"></span>
+          </div>
+
+          <!-- Login Error Alert -->
+          <div x-show="loginError" x-transition class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+            <span x-text="loginError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="login-username" class="form-label">Username</label>
+            <input
+              id="login-username"
+              type="text"
+              class="form-input"
+              x-model="loginForm.userName"
+              placeholder="e.g. admin"
+              autocomplete="username"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              class="form-input"
+              x-model="loginForm.password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--space-2);" :disabled="loginLoading">
+            <span x-show="loginLoading" class="spinner" aria-hidden="true"></span>
+            <span x-text="loginLoading ? 'Authenticating...' : 'Sign in to console'"></span>
+          </button>
+        </form>
+      </div>
+    </main>
+  </template>
+
+  <!-- Authenticated Application Shell -->
+  <template x-if="isAuthenticated">
+    <div>
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-container">
+          <div class="brand-section">
+            <span class="brand-pulse"></span>
+            <span class="brand-logo">LabPulse</span>
+
+            <nav class="nav-tabs" aria-label="Main Navigation">
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': currentView === 'services' }"
+                @click="currentView = 'services'"
+              >
+                Services
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': currentView === 'incidents' }"
+                @click="currentView = 'incidents'"
+              >
+                Incidents
+              </button>
+            </nav>
+          </div>
+
+          <div class="header-actions">
+            <div class="telemetry-pill">
+              <span>Operator:</span>
+              <strong style="color: var(--text-bright);" x-text="userName"></strong>
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" @click="handleLogout" aria-label="Sign out">
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Placeholder for Views -->
+      </main>
+    </div>
+  </template>
+
+</body>
+</html>
