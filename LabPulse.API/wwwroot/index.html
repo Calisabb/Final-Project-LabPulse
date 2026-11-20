@@ -130,6 +130,10 @@
           </div>
 
           <div class="header-actions">
+            <button type="button" class="btn btn-primary btn-sm" @click="openCreateServiceModal" aria-label="Add monitored service">
+              <span>+ Add Service</span>
+            </button>
+
             <div class="telemetry-pill">
               <span>Operator:</span>
               <strong style="color: var(--text-bright);" x-text="userName"></strong>
@@ -142,9 +146,430 @@
         </div>
       </header>
 
-      <main class="main-content">
-        <!-- Placeholder for Views -->
-      </main>
+      <!-- Services View -->
+      <template x-if="currentView === 'services'">
+        <div>
+          <!-- Filter Toolbar -->
+          <section class="toolbar-section" aria-label="Filters and search">
+            <div class="toolbar-row">
+              <!-- Search box -->
+              <div class="search-box">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input
+                  type="text"
+                  class="search-input"
+                  x-model="searchQuery"
+                  placeholder="Search service name or host..."
+                  aria-label="Search services"
+                >
+                <button
+                  type="button"
+                  x-show="searchQuery"
+                  class="search-clear"
+                  @click="searchQuery = ''"
+                  aria-label="Clear search query"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <!-- Status filter segmented buttons -->
+              <div class="status-filters" role="group" aria-label="Status Filter">
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'all' }"
+                  @click="selectedStatus = 'all'"
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'online' }"
+                  @click="selectedStatus = 'online'"
+                >
+                  Online
+                </button>
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'offline' }"
+                  @click="selectedStatus = 'offline'"
+                >
+                  Offline
+                </button>
+              </div>
+            </div>
+
+            <!-- Category filter chips -->
+            <div class="category-chips" role="group" aria-label="Category Filter">
+              <button
+                type="button"
+                class="category-chip"
+                :class="{ 'active': selectedCategory === null }"
+                @click="selectedCategory = null"
+              >
+                All categories
+              </button>
+
+              <template x-for="cat in categories" :key="cat.id">
+                <button
+                  type="button"
+                  class="category-chip"
+                  :class="{ 'active': selectedCategory === cat.id }"
+                  @click="selectedCategory = (selectedCategory === cat.id ? null : cat.id)"
+                >
+                  <span class="chip-dot" :style="{ backgroundColor: cat.color || '#38bdf8' }"></span>
+                  <span x-text="cat.name"></span>
+                </button>
+              </template>
+            </div>
+          </section>
+
+          <!-- Main Services Content -->
+          <main class="main-content">
+            <!-- Loading Skeletons -->
+            <div x-show="loadingServices && services.length === 0" class="service-grid">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+
+            <!-- Empty State: No services configured at all -->
+            <div x-show="!loadingServices && services.length === 0" class="empty-state">
+              <div class="empty-icon">📡</div>
+              <h2 style="font-size: 1.125rem;">No services monitored yet</h2>
+              <p style="font-size: 0.8125rem; color: var(--text-muted); max-width: 420px;">
+                Start monitoring your homelab servers, docker containers, and internal applications by adding your first service.
+              </p>
+              <button type="button" class="btn btn-primary" @click="openCreateServiceModal">
+                + Add your first service
+              </button>
+            </div>
+
+            <!-- Empty State: Filter matched nothing -->
+            <div x-show="!loadingServices && services.length > 0 && filteredServices.length === 0" class="empty-state">
+              <div class="empty-icon">🔍</div>
+              <h2 style="font-size: 1.125rem;">No matching services found</h2>
+              <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                No monitored endpoints match the active filters or search terms.
+              </p>
+              <button type="button" class="btn btn-secondary btn-sm" @click="resetFilters">
+                Reset filters
+              </button>
+            </div>
+
+            <!-- Grouped Service Lists -->
+            <template x-for="group in groupedCategories" :key="group.category.id">
+              <section class="category-group">
+                <div class="category-group-header">
+                  <div class="category-title">
+                    <span class="chip-dot" :style="{ backgroundColor: group.category.color || '#38bdf8' }"></span>
+                    <span x-text="group.category.name"></span>
+                    <span class="category-count" x-text="group.services.length"></span>
+                  </div>
+                </div>
+
+                <div class="service-grid">
+                  <template x-for="service in group.services" :key="service.id">
+                    <article class="service-card">
+                      <div class="card-top">
+                        <div class="service-identity">
+                          <div class="service-icon-box">
+                            <span x-text="service.icon || '🖥️'"></span>
+                          </div>
+                          <div class="service-meta">
+                            <h3 class="service-name" x-text="service.name"></h3>
+                            <div class="service-endpoint" :title="window.Format.endpoint(service)">
+                              <span x-text="window.Format.endpoint(service)"></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="status-badge" :class="window.Format.statusKey(service.serviceStatus)">
+                          <span class="status-dot" :class="window.Format.statusKey(service.serviceStatus)"></span>
+                          <span x-text="window.Format.statusLabel(service.serviceStatus)"></span>
+                        </div>
+                      </div>
+
+                      <!-- Description -->
+                      <p class="service-description" x-text="service.description || 'No description provided.'"></p>
+
+                      <!-- Telemetry Status Bar -->
+                      <div class="card-status-bar">
+                        <span class="telemetry-pill">
+                          <span>Latency:</span>
+                          <strong class="response-time" x-text="window.Format.responseTime(service.lastResponceTimeMs)"></strong>
+                        </span>
+
+                        <span class="telemetry-pill" :title="window.Format.dateTime(service.lastCheckedAt)">
+                          <span>Checked:</span>
+                          <span x-text="window.Format.relativeTime(service.lastCheckedAt)"></span>
+                        </span>
+                      </div>
+
+                      <!-- Card Actions -->
+                      <div class="card-actions">
+                        <div style="display: flex; gap: var(--space-2);">
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm"
+                            @click="openEditServiceModal(service)"
+                            title="Edit service configuration"
+                            aria-label="Edit service"
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm"
+                            @click="confirmDeleteService(service)"
+                            title="Delete service"
+                            aria-label="Delete service"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  </template>
+                </div>
+              </section>
+            </template>
+          </main>
+        </div>
+      </template>
+
+      <!-- Incidents View Placeholder -->
+      <template x-if="currentView === 'incidents'">
+        <main class="main-content">
+          <div class="empty-state">
+            <h2 style="font-size: 1.125rem;">Incidents Dashboard</h2>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              Global system incident tracking view.
+            </p>
+          </div>
+        </main>
+      </template>
+
+      <!-- Create / Edit Service Modal -->
+      <div
+        x-show="isServiceModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeServiceModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-modal-title"
+      >
+        <div class="modal-dialog" @click.outside="closeServiceModal">
+          <div class="modal-header">
+            <h2 id="service-modal-title" style="font-size: 1rem;" x-text="isEditMode ? 'Edit Monitored Service' : 'Add New Monitored Service'"></h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeServiceModal" aria-label="Close dialog">
+              &times;
+            </button>
+          </div>
+
+          <form @submit.prevent="submitServiceForm">
+            <div class="modal-body">
+              <!-- General Error Message -->
+              <div x-show="serviceFormErrors.general" class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+                <span x-text="serviceFormErrors.general"></span>
+              </div>
+
+              <!-- Name -->
+              <div class="form-group">
+                <label for="srv-name" class="form-label">Service name *</label>
+                <input
+                  id="srv-name"
+                  type="text"
+                  class="form-input"
+                  x-model="serviceForm.name"
+                  placeholder="e.g. Nextcloud Server"
+                  maxlength="100"
+                  required
+                >
+                <span x-show="serviceFormErrors.name" class="form-error" x-text="serviceFormErrors.name"></span>
+              </div>
+
+              <!-- Host & Port Row -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-host" class="form-label">Host / IP *</label>
+                  <input
+                    id="srv-host"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.host"
+                    placeholder="192.168.1.100 or domain"
+                    maxlength="255"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.host" class="form-error" x-text="serviceFormErrors.host"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-port" class="form-label">Port * (1-65535)</label>
+                  <input
+                    id="srv-port"
+                    type="number"
+                    class="form-input"
+                    x-model="serviceForm.port"
+                    min="1"
+                    max="65535"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.port" class="form-error" x-text="serviceFormErrors.port"></span>
+                </div>
+              </div>
+
+              <!-- Check Type & Protocol -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-checktype" class="form-label">Check type</label>
+                  <select id="srv-checktype" class="form-select" x-model="serviceForm.checkType">
+                    <option value="Http">HTTP</option>
+                    <option value="Tcp">TCP</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end; padding-bottom: 0.5rem;">
+                  <label class="form-checkbox-label">
+                    <input type="checkbox" x-model="serviceForm.useHttps">
+                    <span>Use HTTPS (SSL/TLS)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Health Path & Timeout -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-healthpath" class="form-label">Health path (for HTTP)</label>
+                  <input
+                    id="srv-healthpath"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.healthPath"
+                    placeholder="/health or /"
+                    maxlength="255"
+                  >
+                  <span x-show="serviceFormErrors.healthPath" class="form-error" x-text="serviceFormErrors.healthPath"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-timeout" class="form-label">Timeout (500 - 30000 ms)</label>
+                  <input
+                    id="srv-timeout"
+                    type="number"
+                    class="form-input"
+                    x-model="serviceForm.timeoutMs"
+                    min="500"
+                    max="30000"
+                    step="100"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.timeoutMs" class="form-error" x-text="serviceFormErrors.timeoutMs"></span>
+                </div>
+              </div>
+
+              <!-- Category & Icon -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-category" class="form-label">Category *</label>
+                  <select id="srv-category" class="form-select" x-model="serviceForm.categoryId" required>
+                    <option value="">Select category...</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                      <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                  </select>
+                  <span x-show="serviceFormErrors.categoryId" class="form-error" x-text="serviceFormErrors.categoryId"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-icon" class="form-label">Icon / Symbol (max 50 chars)</label>
+                  <input
+                    id="srv-icon"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.icon"
+                    placeholder="e.g. 🖥️, 🗄️, 🌐, docker"
+                    maxlength="50"
+                  >
+                  <span x-show="serviceFormErrors.icon" class="form-error" x-text="serviceFormErrors.icon"></span>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group">
+                <label for="srv-desc" class="form-label">Description (optional)</label>
+                <textarea
+                  id="srv-desc"
+                  class="form-textarea"
+                  x-model="serviceForm.description"
+                  placeholder="Notes about service purpose, subnet, container ID..."
+                  maxlength="500"
+                ></textarea>
+                <span x-show="serviceFormErrors.description" class="form-error" x-text="serviceFormErrors.description"></span>
+              </div>
+
+              <!-- Monitoring enabled checkbox -->
+              <label class="form-checkbox-label">
+                <input type="checkbox" x-model="serviceForm.isMonitoringEnabled">
+                <span>Enable periodic background health monitoring</span>
+              </label>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeServiceModal">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="savingService">
+                <span x-show="savingService" class="spinner" aria-hidden="true"></span>
+                <span x-text="savingService ? 'Saving...' : (isEditMode ? 'Update Service' : 'Save Service')"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Service Confirmation Modal -->
+      <div
+        x-show="isDeleteModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeDeleteModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 440px;" @click.outside="closeDeleteModal">
+          <div class="modal-header">
+            <h2 id="delete-modal-title" style="font-size: 1rem; color: #fb7185;">Confirm Deletion</h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeDeleteModal" aria-label="Close dialog">
+              &times;
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <p style="font-size: 0.875rem;">
+              Are you sure you want to delete <strong style="color: var(--text-bright);" x-text="serviceToDelete ? serviceToDelete.name : ''"></strong>?
+            </p>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              All recorded health logs, incidents, and associated runbooks will be permanently removed.
+            </p>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" @click="executeDeleteService" :disabled="deletingService">
+              <span x-show="deletingService" class="spinner" aria-hidden="true"></span>
+              <span x-text="deletingService ? 'Deleting...' : 'Delete Service'"></span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </template>
 
