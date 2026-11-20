@@ -159,7 +159,7 @@
         </div>
       </header>
 
-      <!-- Services View -->
+      <!-- 1. Services View -->
       <template x-if="currentView === 'services'">
         <div>
           <!-- Filter Toolbar -->
@@ -286,7 +286,7 @@
 
                 <div class="service-grid">
                   <template x-for="service in group.services" :key="service.id">
-                    <article class="service-card">
+                    <article class="service-card" @click="openServicePanel(service, 'overview')">
                       <div class="card-top">
                         <div class="service-identity">
                           <div class="service-icon-box">
@@ -329,7 +329,7 @@
                       </div>
 
                       <!-- Card Actions -->
-                      <div class="card-actions">
+                      <div class="card-actions" @click.stop>
                         <button
                           type="button"
                           class="btn btn-secondary btn-sm"
@@ -342,6 +342,15 @@
                         </button>
 
                         <div style="display: flex; gap: var(--space-2);">
+                          <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            @click="openServicePanel(service, 'runbooks')"
+                            title="View service runbooks"
+                            aria-label="View runbooks"
+                          >
+                            📖 Runbooks
+                          </button>
                           <button
                             type="button"
                             class="btn-icon btn-sm"
@@ -371,17 +380,459 @@
         </div>
       </template>
 
-      <!-- Incidents View Placeholder -->
+      <!-- 2. Global Incidents Dashboard View -->
       <template x-if="currentView === 'incidents'">
         <main class="main-content">
-          <div class="empty-state">
-            <h2 style="font-size: 1.125rem;">Incidents Dashboard</h2>
+          <div class="toolbar-row" style="margin-bottom: var(--space-4);">
+            <div>
+              <h1 style="font-size: 1.25rem;">Incident History</h1>
+              <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                System outage tracking, durations, and resolution logs.
+              </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-4);">
+              <label class="form-checkbox-label">
+                <input type="checkbox" x-model="incidentsOnlyOpen">
+                <span>Show open incidents only</span>
+              </label>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                @click="loadIncidents()"
+                :disabled="loadingIncidents"
+              >
+                <span x-show="loadingIncidents" class="spinner" aria-hidden="true"></span>
+                <span x-text="loadingIncidents ? 'Refreshing...' : '🔄 Refresh'"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Incidents Loading Skeletons -->
+          <div x-show="loadingIncidents && incidents.length === 0" class="incidents-container">
+            <div class="skeleton-card" style="height: 100px;"></div>
+            <div class="skeleton-card" style="height: 100px;"></div>
+          </div>
+
+          <!-- Incidents Empty State -->
+          <div x-show="!loadingIncidents && incidents.length === 0" class="empty-state">
+            <div class="empty-icon" style="color: #34d399;">✓</div>
+            <h2 style="font-size: 1.125rem;">No incidents reported</h2>
             <p style="font-size: 0.8125rem; color: var(--text-muted);">
-              Global system incident tracking view.
+              <span x-text="incidentsOnlyOpen ? 'There are currently no unresolved service outages.' : 'No service outages have occurred.'"></span>
             </p>
+          </div>
+
+          <!-- Incidents List -->
+          <div x-show="incidents.length > 0" class="incidents-container">
+            <template x-for="inc in incidents" :key="inc.id">
+              <div class="incident-item">
+                <div class="incident-header">
+                  <div style="display: flex; align-items: center; gap: var(--space-3);">
+                    <span
+                      class="status-badge"
+                      :class="inc.isOpen ? 'offline' : 'online'"
+                    >
+                      <span class="status-dot" :class="inc.isOpen ? 'offline' : 'online'"></span>
+                      <span x-text="inc.isOpen ? 'Active Incident' : 'Resolved'"></span>
+                    </span>
+                    <span class="incident-service" x-text="inc.serviceName"></span>
+                  </div>
+
+                  <div class="incident-meta">
+                    <span>Started: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.startedAt)"></strong></span>
+                    <span>Duration: <strong style="color: #38bdf8;" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
+                    <span x-show="!inc.isOpen && inc.resolvedAt">
+                      Resolved: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.resolvedAt)"></strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="incident-reason">
+                  <span>Reason: </span>
+                  <span x-text="inc.reason || 'Service probe failed with unexpected error.'"></span>
+                </div>
+              </div>
+            </template>
           </div>
         </main>
       </template>
+
+      <!-- 3. Service Detail Side Panel (Flyout Drawer) -->
+      <div
+        x-show="isPanelOpen"
+        class="panel-backdrop"
+        @click="closeServicePanel"
+        @keydown.escape.window="closeServicePanel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="side-panel-title"
+      >
+        <div class="side-panel" @click.stop>
+          <div class="panel-header">
+            <div style="display: flex; align-items: center; gap: var(--space-3); min-width: 0;">
+              <div class="service-icon-box">
+                <span x-text="selectedService ? (selectedService.icon || '🖥️') : '🖥️'"></span>
+              </div>
+              <div style="min-width: 0;">
+                <h2 id="side-panel-title" style="font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="selectedService ? selectedService.name : 'Service Details'"></h2>
+                <div class="service-endpoint" x-text="selectedService ? window.Format.endpoint(selectedService) : ''"></div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <div
+                class="status-badge"
+                :class="selectedService ? window.Format.statusKey(selectedService.serviceStatus) : 'unknown'"
+              >
+                <span class="status-dot" :class="selectedService ? window.Format.statusKey(selectedService.serviceStatus) : 'unknown'"></span>
+                <span x-text="selectedService ? window.Format.statusLabel(selectedService.serviceStatus) : 'Unknown'"></span>
+              </div>
+
+              <button type="button" class="btn-icon btn-sm" @click="closeServicePanel" aria-label="Close side panel">
+                &times;
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Nav Tabs -->
+          <div style="padding: var(--space-3) var(--space-5) 0; border-bottom: 1px solid var(--glass-border);">
+            <nav class="nav-tabs" style="width: 100%; justify-content: flex-start;" aria-label="Service Panel Tabs">
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'overview' }"
+                @click="switchPanelTab('overview')"
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'runbooks' }"
+                @click="switchPanelTab('runbooks')"
+              >
+                Runbooks (<span x-text="serviceRunbooks.length"></span>)
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'incidents' }"
+                @click="switchPanelTab('incidents')"
+              >
+                Incidents (<span x-text="serviceIncidents.length"></span>)
+              </button>
+            </nav>
+          </div>
+
+          <div class="panel-body">
+            <!-- Tab 1: Overview -->
+            <template x-if="panelTab === 'overview'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2);">Endpoint Configuration</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); font-size: 0.8125rem;">
+                    <div>
+                      <span style="color: var(--text-muted);">Protocol:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService && selectedService.useHttps ? 'HTTPS' : 'HTTP'"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Check Type:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? (selectedService.checkType === 2 ? 'TCP' : 'HTTP') : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Host & Port:</span>
+                      <strong style="color: var(--text-bright); display: block; font-family: var(--font-mono);" x-text="selectedService ? `${selectedService.host}:${selectedService.port}` : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Health Path:</span>
+                      <strong style="color: var(--text-bright); display: block; font-family: var(--font-mono);" x-text="selectedService && selectedService.healthPath ? selectedService.healthPath : '—'"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Timeout:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? `${selectedService.timeoutMs} ms` : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Category:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? selectedService.categoryName : ''"></strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-1);">Description</h3>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);" x-text="selectedService && selectedService.description ? selectedService.description : 'No description provided.'"></p>
+                </div>
+
+                <!-- Live Status & Telemetry -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2);">Live Telemetry</h3>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <span style="color: var(--text-muted); font-size: 0.75rem;">Last Latency:</span>
+                      <div class="response-time" style="font-size: 1.125rem; font-family: var(--font-mono);" x-text="selectedService ? window.Format.responseTime(selectedService.lastResponceTimeMs) : '—'"></div>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted); font-size: 0.75rem;">Last Probe:</span>
+                      <div style="font-size: 0.8125rem; color: var(--text-bright);" x-text="selectedService ? window.Format.dateTime(selectedService.lastCheckedAt) : 'Never'"></div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      @click="checkSingleService(selectedService)"
+                      :disabled="selectedService && checkingServiceIds[selectedService.id]"
+                    >
+                      <span x-show="selectedService && checkingServiceIds[selectedService.id]" class="spinner" aria-hidden="true"></span>
+                      <span x-text="(selectedService && checkingServiceIds[selectedService.id]) ? 'Checking...' : '⚡ Probe Now'"></span>
+                    </button>
+                  </div>
+
+                  <div x-show="selectedService && lastCheckErrors[selectedService.id]" class="error-snippet" style="margin-top: var(--space-3);" role="alert">
+                    <span x-text="selectedService ? lastCheckErrors[selectedService.id] : ''"></span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); margin-top: auto;">
+                  <button type="button" class="btn btn-secondary" style="flex: 1;" @click="openEditServiceModal(selectedService)">
+                    ✎ Edit Configuration
+                  </button>
+                  <button type="button" class="btn btn-danger" @click="confirmDeleteService(selectedService)">
+                    🗑 Delete Service
+                  </button>
+                </div>
+              </div>
+            </template>
+
+            <!-- Tab 2: Runbooks -->
+            <template x-if="panelTab === 'runbooks'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.9375rem;">Operational Runbooks</h3>
+                  <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
+                    + Add Runbook
+                  </button>
+                </div>
+
+                <!-- Loading state -->
+                <div x-show="loadingRunbooks" class="empty-state" style="padding: var(--space-5);">
+                  <span class="spinner" style="width: 24px; height: 24px;"></span>
+                  <span>Loading service runbooks...</span>
+                </div>
+
+                <!-- Empty state -->
+                <div x-show="!loadingRunbooks && serviceRunbooks.length === 0" class="empty-state">
+                  <div class="empty-icon">📖</div>
+                  <h4 style="font-size: 0.9375rem;">No runbooks yet</h4>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                    Document disaster recovery commands, container restart snippets, or diagnostic steps.
+                  </p>
+                  <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
+                    + Create first runbook
+                  </button>
+                </div>
+
+                <!-- Runbooks List -->
+                <template x-for="rb in serviceRunbooks" :key="rb.id">
+                  <div class="runbook-card">
+                    <div class="runbook-header">
+                      <div style="display: flex; align-items: center; gap: var(--space-2);">
+                        <span class="shell-badge" x-text="window.Format.shellTypeName(rb.shellType)"></span>
+                        <h4 class="runbook-title" x-text="rb.title"></h4>
+                      </div>
+
+                      <div style="display: flex; align-items: center; gap: var(--space-2);">
+                        <button
+                          type="button"
+                          class="btn-icon btn-sm"
+                          @click="openEditRunbookModal(rb)"
+                          title="Edit runbook"
+                          aria-label="Edit runbook"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-icon btn-sm"
+                          @click="deleteRunbook(rb)"
+                          :disabled="deletingRunbookId === rb.id"
+                          title="Delete runbook"
+                          aria-label="Delete runbook"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Command Snippet with Copy Feedback -->
+                    <div class="command-snippet">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm copy-btn"
+                        @click="copyCommand(rb)"
+                        aria-label="Copy command snippet"
+                      >
+                        <span x-text="copiedRunbookId === rb.id ? '✓ Copied!' : '📋 Copy'"></span>
+                      </button>
+                      <code x-text="rb.commandText"></code>
+                    </div>
+
+                    <!-- Notes -->
+                    <p x-show="rb.notes" style="font-size: 0.75rem; color: var(--text-muted); margin-top: var(--space-1);" x-text="rb.notes"></p>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Tab 3: Service Incidents -->
+            <template x-if="panelTab === 'incidents'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.9375rem;">Service Outage Incidents</h3>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    @click="loadServiceIncidents(selectedService.id)"
+                    :disabled="loadingServiceIncidents"
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+
+                <div x-show="loadingServiceIncidents" class="empty-state" style="padding: var(--space-5);">
+                  <span class="spinner" style="width: 24px; height: 24px;"></span>
+                  <span>Loading service incidents...</span>
+                </div>
+
+                <div x-show="!loadingServiceIncidents && serviceIncidents.length === 0" class="empty-state">
+                  <div class="empty-icon" style="color: #34d399;">✓</div>
+                  <h4 style="font-size: 0.9375rem;">Clean track record</h4>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                    No outages or incident logs recorded for this endpoint.
+                  </p>
+                </div>
+
+                <template x-for="inc in serviceIncidents" :key="inc.id">
+                  <div class="incident-item">
+                    <div class="incident-header">
+                      <span class="status-badge" :class="inc.isOpen ? 'offline' : 'online'">
+                        <span class="status-dot" :class="inc.isOpen ? 'offline' : 'online'"></span>
+                        <span x-text="inc.isOpen ? 'Ongoing Outage' : 'Resolved'"></span>
+                      </span>
+
+                      <div class="incident-meta">
+                        <span>Duration: <strong style="color: #38bdf8;" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
+                      </div>
+                    </div>
+
+                    <div class="incident-reason">
+                      <span x-text="inc.reason"></span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                      <span>Started: <span x-text="window.Format.dateTime(inc.startedAt)"></span></span>
+                      <span x-show="!inc.isOpen && inc.resolvedAt">
+                        Resolved: <span x-text="window.Format.dateTime(inc.resolvedAt)"></span>
+                      </span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create / Edit Runbook Modal -->
+      <div
+        x-show="isRunbookModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeRunbookModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="runbook-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 480px;" @click.outside="closeRunbookModal">
+          <div class="modal-header">
+            <h2 id="runbook-modal-title" style="font-size: 1rem;" x-text="isRunbookEditMode ? 'Edit Runbook' : 'Add Runbook'"></h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeRunbookModal" aria-label="Close dialog">
+              &times;
+            </button>
+          </div>
+
+          <form @submit.prevent="submitRunbookForm">
+            <div class="modal-body">
+              <div x-show="runbookFormErrors.general" class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+                <span x-text="runbookFormErrors.general"></span>
+              </div>
+
+              <!-- Title -->
+              <div class="form-group">
+                <label for="rb-title" class="form-label">Runbook title *</label>
+                <input
+                  id="rb-title"
+                  type="text"
+                  class="form-input"
+                  x-model="runbookForm.title"
+                  placeholder="e.g. Restart Docker Container"
+                  maxlength="150"
+                  required
+                >
+                <span x-show="runbookFormErrors.title" class="form-error" x-text="runbookFormErrors.title"></span>
+              </div>
+
+              <!-- Shell Type -->
+              <div class="form-group">
+                <label for="rb-shell" class="form-label">Shell / Environment</label>
+                <select id="rb-shell" class="form-select" x-model="runbookForm.shellType">
+                  <option value="Bash">Bash</option>
+                  <option value="PowerShell">PowerShell</option>
+                  <option value="Docker">Docker</option>
+                </select>
+              </div>
+
+              <!-- Command Text -->
+              <div class="form-group">
+                <label for="rb-cmd" class="form-label">Command text *</label>
+                <textarea
+                  id="rb-cmd"
+                  class="form-textarea"
+                  style="font-family: var(--font-mono); font-size: 0.8125rem;"
+                  x-model="runbookForm.commandText"
+                  placeholder="docker restart service_name or systemctl restart ..."
+                  maxlength="500"
+                  required
+                ></textarea>
+                <span x-show="runbookFormErrors.commandText" class="form-error" x-text="runbookFormErrors.commandText"></span>
+              </div>
+
+              <!-- Notes -->
+              <div class="form-group">
+                <label for="rb-notes" class="form-label">Notes (optional)</label>
+                <textarea
+                  id="rb-notes"
+                  class="form-textarea"
+                  x-model="runbookForm.notes"
+                  placeholder="Additional operator instructions or safety flags..."
+                  maxlength="500"
+                ></textarea>
+                <span x-show="runbookFormErrors.notes" class="form-error" x-text="runbookFormErrors.notes"></span>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeRunbookModal">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="savingRunbook">
+                <span x-show="savingRunbook" class="spinner" aria-hidden="true"></span>
+                <span x-text="savingRunbook ? 'Saving...' : (isRunbookEditMode ? 'Update Runbook' : 'Add Runbook')"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <!-- Create / Edit Service Modal -->
       <div

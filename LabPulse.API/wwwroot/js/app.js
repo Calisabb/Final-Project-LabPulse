@@ -76,6 +76,38 @@ document.addEventListener('alpine:init', () => {
     serviceToDelete: null,
     deletingService: false,
 
+    // Service Detail Side Panel State
+    isPanelOpen: false,
+    selectedService: null,
+    panelTab: 'overview', // 'overview' | 'runbooks' | 'incidents' | 'uptime'
+
+    // Runbooks State
+    serviceRunbooks: [],
+    loadingRunbooks: false,
+    isRunbookModalOpen: false,
+    isRunbookEditMode: false,
+    savingRunbook: false,
+    deletingRunbookId: null,
+    copiedRunbookId: null,
+    runbookForm: {
+      id: null,
+      serviceId: null,
+      title: '',
+      shellType: 'Bash',
+      commandText: '',
+      notes: ''
+    },
+    runbookFormErrors: {},
+
+    // Service-specific Incidents State
+    serviceIncidents: [],
+    loadingServiceIncidents: false,
+
+    // Global Incidents Dashboard State
+    incidents: [],
+    loadingIncidents: false,
+    incidentsOnlyOpen: false,
+
     // Auto-refresh timer
     refreshIntervalId: null,
 
@@ -89,6 +121,7 @@ document.addEventListener('alpine:init', () => {
             this.loginMessage = e.detail.reason;
           }
           this.stopAutoRefresh();
+          this.closeServicePanel();
         } else {
           this.loadInitialData();
           this.startAutoRefresh();
@@ -106,7 +139,24 @@ document.addEventListener('alpine:init', () => {
           this.stopAutoRefresh();
         } else if (this.isAuthenticated) {
           this.refreshServicesSilently();
+          if (this.currentView === 'incidents') {
+            this.loadIncidents();
+          }
           this.startAutoRefresh();
+        }
+      });
+
+      // Watch currentView changes
+      this.$watch('currentView', (view) => {
+        if (view === 'incidents') {
+          this.loadIncidents();
+        }
+      });
+
+      // Watch incidentsOnlyOpen toggle
+      this.$watch('incidentsOnlyOpen', () => {
+        if (this.currentView === 'incidents') {
+          this.loadIncidents();
         }
       });
     },
@@ -143,6 +193,7 @@ document.addEventListener('alpine:init', () => {
 
     handleLogout() {
       this.stopAutoRefresh();
+      this.closeServicePanel();
       window.Auth.clearSession();
       this.isAuthenticated = false;
       this.loginMessage = 'You have signed out.';
@@ -197,9 +248,17 @@ document.addEventListener('alpine:init', () => {
               this.services.push(s);
             }
           }
+
+          // If panel is open, update selectedService
+          if (this.selectedService) {
+            const updated = map.get(this.selectedService.id);
+            if (updated) {
+              this.selectedService = { ...this.selectedService, ...updated };
+            }
+          }
         }
       } catch {
-        // Silent failure on background polling
+        // Silent background polling
       }
     },
 
@@ -207,6 +266,9 @@ document.addEventListener('alpine:init', () => {
       this.stopAutoRefresh();
       this.refreshIntervalId = setInterval(() => {
         this.refreshServicesSilently();
+        if (this.currentView === 'incidents') {
+          this.loadIncidents(true);
+        }
       }, 30000); // 30 seconds requirement
     },
 
@@ -300,10 +362,13 @@ document.addEventListener('alpine:init', () => {
         const latency = res.responseTimeMs !== undefined ? res.responseTimeMs : res.ResponseTimeMs;
         const errMsg = res.errorMessage !== undefined ? res.errorMessage : res.ErrorMessage;
 
-        // Update service in place
         service.serviceStatus = isOnline ? 'Online' : 'Offline';
         service.lastResponceTimeMs = latency;
         service.lastCheckedAt = new Date().toISOString();
+
+        if (this.selectedService && this.selectedService.id === id) {
+          this.selectedService = { ...service };
+        }
 
         if (!isOnline && errMsg) {
           this.lastCheckErrors = { ...this.lastCheckErrors, [id]: errMsg };
@@ -337,7 +402,6 @@ document.addEventListener('alpine:init', () => {
         const offline = res.offline ?? res.Offline ?? 0;
         const results = res.results ?? res.Results ?? [];
 
-        // Apply results to local services list
         if (Array.isArray(results) && results.length > 0) {
           const resMap = new Map();
           results.forEach(r => {
@@ -377,6 +441,208 @@ document.addEventListener('alpine:init', () => {
         Alpine.store('toasts').show(`Bulk check failed: ${err.message}`, 'error');
       } finally {
         this.isCheckingAll = false;
+      }
+    },
+
+    /* ------------------- Side Panel: Service Details, Runbooks, Incidents ------------------- */
+    openServicePanel(service, tab = 'overview') {
+      this.selectedService = service;
+      this.panelTab = tab;
+      this.isPanelOpen = true;
+
+      if (tab === 'runbooks') {
+        this.loadServiceRunbooks(service.id);
+      } else if (tab === 'incidents') {
+        this.loadServiceIncidents(service.id);
+      }
+    },
+
+    closeServicePanel() {
+      this.isPanelOpen = false;
+      this.selectedService = null;
+    },
+
+    switchPanelTab(tab) {
+      this.panelTab = tab;
+      if (!this.selectedService) return;
+
+      if (tab === 'runbooks') {
+        this.loadServiceRunbooks(this.selectedService.id);
+      } else if (tab === 'incidents') {
+        this.loadServiceIncidents(this.selectedService.id);
+      }
+    },
+
+    /* ------------------- Runbooks Management ------------------- */
+    async loadServiceRunbooks(serviceId) {
+      this.loadingRunbooks = true;
+      try {
+        const data = await window.Api.getServiceRunbooks(serviceId);
+        this.serviceRunbooks = Array.isArray(data) ? data : [];
+      } catch (err) {
+        Alpine.store('toasts').show(`Failed to load runbooks: ${err.message}`, 'error');
+      } finally {
+        this.loadingRunbooks = false;
+      }
+    },
+
+    openCreateRunbookModal() {
+      if (!this.selectedService) return;
+      this.isRunbookEditMode = false;
+      this.runbookFormErrors = {};
+      this.runbookForm = {
+        id: null,
+        serviceId: this.selectedService.id,
+        title: '',
+        shellType: 'Bash',
+        commandText: '',
+        notes: ''
+      };
+      this.isRunbookModalOpen = true;
+    },
+
+    openEditRunbookModal(runbook) {
+      this.isRunbookEditMode = true;
+      this.runbookFormErrors = {};
+      this.runbookForm = {
+        id: runbook.id,
+        serviceId: runbook.serviceId,
+        title: runbook.title || '',
+        shellType: typeof runbook.shellType === 'number'
+          ? (runbook.shellType === 1 ? 'Docker' : runbook.shellType === 2 ? 'PowerShell' : 'Bash')
+          : (runbook.shellType || 'Bash'),
+        commandText: runbook.commandText || '',
+        notes: runbook.notes || ''
+      };
+      this.isRunbookModalOpen = true;
+    },
+
+    closeRunbookModal() {
+      this.isRunbookModalOpen = false;
+      this.runbookFormErrors = {};
+    },
+
+    validateRunbookForm() {
+      const errs = {};
+      const f = this.runbookForm;
+
+      if (!f.title || !f.title.trim()) {
+        errs.title = 'Title is required.';
+      } else if (f.title.length > 150) {
+        errs.title = 'Title cannot exceed 150 characters.';
+      }
+
+      if (!f.commandText || !f.commandText.trim()) {
+        errs.commandText = 'Command text is required.';
+      } else if (f.commandText.length > 500) {
+        errs.commandText = 'Command text cannot exceed 500 characters.';
+      }
+
+      if (f.notes && f.notes.length > 500) {
+        errs.notes = 'Notes cannot exceed 500 characters.';
+      }
+
+      this.runbookFormErrors = errs;
+      return Object.keys(errs).length === 0;
+    },
+
+    async submitRunbookForm() {
+      if (!this.validateRunbookForm()) return;
+
+      this.savingRunbook = true;
+      this.runbookFormErrors = {};
+
+      const dto = {
+        title: this.runbookForm.title.trim(),
+        shellType: this.runbookForm.shellType,
+        commandText: this.runbookForm.commandText.trim(),
+        notes: this.runbookForm.notes ? this.runbookForm.notes.trim() : null
+      };
+
+      try {
+        if (this.isRunbookEditMode) {
+          await window.Api.updateRunbook(this.runbookForm.id, dto);
+          Alpine.store('toasts').show(`Runbook "${dto.title}" updated`, 'success');
+        } else {
+          dto.serviceId = this.selectedService.id;
+          await window.Api.createRunbook(dto);
+          Alpine.store('toasts').show(`Runbook "${dto.title}" added`, 'success');
+        }
+        this.closeRunbookModal();
+        if (this.selectedService) {
+          await this.loadServiceRunbooks(this.selectedService.id);
+        }
+      } catch (err) {
+        if (err.errors && typeof err.errors === 'object') {
+          const mapped = {};
+          for (const key of Object.keys(err.errors)) {
+            const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+            mapped[camelKey] = err.getFieldError(key);
+          }
+          this.runbookFormErrors = mapped;
+        } else {
+          this.runbookFormErrors = { general: err.message };
+        }
+      } finally {
+        this.savingRunbook = false;
+      }
+    },
+
+    async deleteRunbook(runbook) {
+      if (!runbook || !confirm(`Delete runbook "${runbook.title}"?`)) return;
+
+      this.deletingRunbookId = runbook.id;
+      try {
+        await window.Api.deleteRunbook(runbook.id);
+        this.serviceRunbooks = this.serviceRunbooks.filter(r => r.id !== runbook.id);
+        Alpine.store('toasts').show(`Runbook "${runbook.title}" deleted`, 'info');
+      } catch (err) {
+        Alpine.store('toasts').show(`Failed to delete runbook: ${err.message}`, 'error');
+      } finally {
+        this.deletingRunbookId = null;
+      }
+    },
+
+    async copyCommand(runbook) {
+      if (!runbook || !runbook.commandText) return;
+      try {
+        await navigator.clipboard.writeText(runbook.commandText);
+        this.copiedRunbookId = runbook.id;
+        setTimeout(() => {
+          if (this.copiedRunbookId === runbook.id) {
+            this.copiedRunbookId = null;
+          }
+        }, 2000);
+        Alpine.store('toasts').show('Command copied to clipboard', 'info', 2000);
+      } catch {
+        Alpine.store('toasts').show('Failed to copy to clipboard', 'error');
+      }
+    },
+
+    /* ------------------- Service Incidents & Global Incidents ------------------- */
+    async loadServiceIncidents(serviceId) {
+      this.loadingServiceIncidents = true;
+      try {
+        const data = await window.Api.getServiceIncidents(serviceId);
+        this.serviceIncidents = Array.isArray(data) ? data : [];
+      } catch (err) {
+        Alpine.store('toasts').show(`Failed to load service incidents: ${err.message}`, 'error');
+      } finally {
+        this.loadingServiceIncidents = false;
+      }
+    },
+
+    async loadIncidents(silent = false) {
+      if (!silent) this.loadingIncidents = true;
+      try {
+        const data = await window.Api.getIncidents(this.incidentsOnlyOpen);
+        this.incidents = Array.isArray(data) ? data : [];
+      } catch (err) {
+        if (!silent) {
+          Alpine.store('toasts').show(`Failed to load incidents: ${err.message}`, 'error');
+        }
+      } finally {
+        if (!silent) this.loadingIncidents = false;
       }
     },
 
@@ -544,6 +810,9 @@ document.addEventListener('alpine:init', () => {
       try {
         await window.Api.deleteService(id);
         this.services = this.services.filter(s => s.id !== id);
+        if (this.selectedService && this.selectedService.id === id) {
+          this.closeServicePanel();
+        }
         Alpine.store('toasts').show(`Service "${name}" deleted`, 'info');
         this.closeDeleteModal();
       } catch (err) {
