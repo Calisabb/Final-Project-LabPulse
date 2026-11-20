@@ -430,6 +430,7 @@
   flex-direction: column;
   gap: var(--space-3);
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: pointer;
 }
 
 .service-card:hover {
@@ -480,11 +481,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.service-name:hover {
-  color: var(--color-beacon-cyan);
 }
 
 .service-endpoint {
@@ -555,6 +551,7 @@
 .uptime-strip-label {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.6875rem;
   color: var(--text-dim);
 }
@@ -564,10 +561,21 @@
   align-items: center;
   gap: 2px;
   height: 16px;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.28);
   padding: 2px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.uptime-strip-large {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .uptime-cell {
@@ -582,6 +590,7 @@
 .uptime-cell:hover {
   transform: scaleY(1.3);
   z-index: 2;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
 }
 
 .uptime-cell.status-perfect {
@@ -601,8 +610,39 @@
 }
 
 .uptime-cell.status-skeleton {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: rgba(255, 255, 255, 0.05);
   animation: pulseSkeleton 1.5s infinite ease-in-out;
+}
+
+.uptime-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.uptime-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.uptime-day-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--space-2);
+}
+
+.uptime-day-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 @keyframes pulseSkeleton {

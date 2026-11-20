@@ -310,6 +310,23 @@
                       <!-- Description -->
                       <p class="service-description" x-text="service.description || 'No description provided.'"></p>
 
+                      <!-- 30-day Uptime Strip -->
+                      <div class="uptime-strip-container" @click.stop="openServicePanel(service, 'uptime')">
+                        <div class="uptime-strip-label">
+                          <span>30-day uptime</span>
+                          <span style="font-family: var(--font-mono); color: var(--text-bright);" x-text="getAverageUptime(service.id)"></span>
+                        </div>
+                        <div class="uptime-strip">
+                          <template x-for="(day, idx) in getUptimeDays(service.id)" :key="idx">
+                            <div
+                              class="uptime-cell"
+                              :class="getUptimeCellClass(service.id, day)"
+                              :title="getUptimeTooltip(service.id, day)"
+                            ></div>
+                          </template>
+                        </div>
+                      </div>
+
                       <!-- Telemetry Status Bar -->
                       <div class="card-status-bar">
                         <span class="telemetry-pill">
@@ -510,6 +527,14 @@
               <button
                 type="button"
                 class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'uptime' }"
+                @click="switchPanelTab('uptime')"
+              >
+                Uptime (30d)
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
                 :class="{ 'active': panelTab === 'runbooks' }"
                 @click="switchPanelTab('runbooks')"
               >
@@ -605,7 +630,76 @@
               </div>
             </template>
 
-            <!-- Tab 2: Runbooks -->
+            <!-- Tab 2: Extended Uptime View -->
+            <template x-if="panelTab === 'uptime'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="runbook-card">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                    <h3 style="font-size: 0.9375rem;">30-day Availability Strip</h3>
+                    <div class="telemetry-pill">
+                      <span>Average:</span>
+                      <strong style="color: #38bdf8;" x-text="selectedService ? getAverageUptime(selectedService.id) : ''"></strong>
+                    </div>
+                  </div>
+
+                  <!-- Large Uptime Strip -->
+                  <div class="uptime-strip-large">
+                    <template x-for="(day, idx) in (selectedService ? getUptimeDays(selectedService.id) : [])" :key="idx">
+                      <div
+                        class="uptime-cell"
+                        :class="getUptimeCellClass(selectedService.id, day)"
+                        :title="getUptimeTooltip(selectedService.id, day)"
+                      ></div>
+                    </template>
+                  </div>
+
+                  <!-- Legend -->
+                  <div class="uptime-legend" style="margin-top: var(--space-3);">
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-perfect" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>100% Online</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-degraded" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>&ge; 90% Degraded</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-down" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>&lt; 90% Down</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-nodata" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>No checks</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Daily Telemetry Breakdown -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-3);">Daily History Breakdown</h3>
+
+                  <div x-show="selectedService && isUptimeLoading(selectedService.id)" class="empty-state" style="padding: var(--space-4);">
+                    <span class="spinner" style="width: 20px; height: 20px;"></span>
+                    <span>Retrieving daily history...</span>
+                  </div>
+
+                  <div x-show="selectedService && !isUptimeLoading(selectedService.id)" class="uptime-day-grid">
+                    <template x-for="day in (selectedService ? getUptimeDays(selectedService.id) : [])" :key="day.date">
+                      <div class="uptime-day-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <span style="font-size: 0.6875rem; color: var(--text-dim);" x-text="day.date"></span>
+                          <span class="status-dot" :class="getUptimeCellClass(selectedService.id, day)" style="width: 6px; height: 6px;"></span>
+                        </div>
+                        <div style="font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; color: var(--text-bright);" x-text="day.totalChecks > 0 ? window.Format.percentage(day.uptimePercentage) : '—'"></div>
+                        <div style="font-size: 0.6875rem; color: var(--text-muted);" x-text="day.totalChecks > 0 ? `${day.onlineChecks}/${day.totalChecks} checks` : 'No checks'"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Tab 3: Runbooks -->
             <template x-if="panelTab === 'runbooks'">
               <div style="display: flex; flex-direction: column; gap: var(--space-4);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -685,7 +779,7 @@
               </div>
             </template>
 
-            <!-- Tab 3: Service Incidents -->
+            <!-- Tab 4: Service Incidents -->
             <template x-if="panelTab === 'incidents'">
               <div style="display: flex; flex-direction: column; gap: var(--space-4);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">

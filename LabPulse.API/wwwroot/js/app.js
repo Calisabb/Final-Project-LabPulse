@@ -51,6 +51,12 @@ document.addEventListener('alpine:init', () => {
     lastCheckErrors: {},
     isCheckingAll: false,
 
+    // Uptime Strip Lazy Loading & Concurrency Queue (max 5 in flight)
+    uptimeCache: {},
+    uptimeQueue: [],
+    uptimeActiveCount: 0,
+    maxUptimeConcurrency: 5,
+
     // Service Modal State (Create / Edit)
     isServiceModalOpen: false,
     isEditMode: false,
@@ -79,7 +85,7 @@ document.addEventListener('alpine:init', () => {
     // Service Detail Side Panel State
     isPanelOpen: false,
     selectedService: null,
-    panelTab: 'overview', // 'overview' | 'runbooks' | 'incidents' | 'uptime'
+    panelTab: 'overview', // 'overview' | 'uptime' | 'runbooks' | 'incidents'
 
     // Runbooks State
     serviceRunbooks: [],
@@ -225,6 +231,8 @@ document.addEventListener('alpine:init', () => {
       try {
         const data = await window.Api.getServices();
         this.services = Array.isArray(data) ? data : [];
+        // Trigger lazy loading of 30-day uptime strips with concurrency control
+        this.services.forEach(s => this.requestUptime(s.id));
       } catch (err) {
         Alpine.store('toasts').show(`Failed to load services: ${err.message}`, 'error');
       } finally {
@@ -246,10 +254,10 @@ document.addEventListener('alpine:init', () => {
           for (const s of data) {
             if (!existingIds.has(s.id)) {
               this.services.push(s);
+              this.requestUptime(s.id);
             }
           }
 
-          // If panel is open, update selectedService
           if (this.selectedService) {
             const updated = map.get(this.selectedService.id);
             if (updated) {
@@ -378,6 +386,9 @@ document.addEventListener('alpine:init', () => {
           this.lastCheckErrors = copy;
         }
 
+        // Invalidate uptime cache for this service so it refreshes with latest probe
+        this.requestUptime(id, true);
+
         const msg = isOnline
           ? `${service.name} is online (${window.Format.responseTime(latency)})`
           : `${service.name} is offline: ${errMsg || 'probe failed'}`;
@@ -425,6 +436,7 @@ document.addEventListener('alpine:init', () => {
               } else {
                 delete this.lastCheckErrors[s.id];
               }
+              this.requestUptime(s.id, true);
             }
           });
           this.lastCheckErrors = { ...this.lastCheckErrors };
@@ -444,6 +456,104 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
+    /* ------------------- Uptime Strip (Concurrency Limited) ------------------- */
+    requestUptime(serviceId, force = false) {
+      if (!serviceId) return;
+      if (!force && this.uptimeCache[serviceId]) return;
+
+      this.uptimeCache = {
+        ...this.uptimeCache,
+        [serviceId]: { loading: true, data: this.uptimeCache[serviceId]?.data || null, error: false }
+      };
+
+      if (!this.uptimeQueue.includes(serviceId)) {
+        this.uptimeQueue.push(serviceId);
+      }
+      this.processUptimeQueue();
+    },
+
+    async processUptimeQueue() {
+      while (this.uptimeActiveCount < this.maxUptimeConcurrency && this.uptimeQueue.length > 0) {
+        const serviceId = this.uptimeQueue.shift();
+        this.uptimeActiveCount++;
+
+        this.fetchUptime(serviceId).finally(() => {
+          this.uptimeActiveCount--;
+          this.processUptimeQueue();
+        });
+      }
+    },
+
+    async fetchUptime(serviceId) {
+      try {
+        const data = await window.Api.getServiceUptime(serviceId, 30);
+        const list = Array.isArray(data) ? data : [];
+        this.uptimeCache = {
+          ...this.uptimeCache,
+          [serviceId]: { loading: false, data: list, error: false }
+        };
+      } catch {
+        // Fail silently per card requirement
+        this.uptimeCache = {
+          ...this.uptimeCache,
+          [serviceId]: { loading: false, data: [], error: true }
+        };
+      }
+    },
+
+    getUptimeDays(serviceId) {
+      const item = this.uptimeCache[serviceId];
+      if (item && item.data && item.data.length > 0) {
+        return item.data;
+      }
+      // Return 30 placeholders for loading skeleton or empty
+      return Array.from({ length: 30 }, (_, i) => ({
+        dummy: true,
+        date: `Day ${i + 1}`,
+        totalChecks: 0,
+        onlineChecks: 0,
+        uptimePercentage: 0
+      }));
+    },
+
+    isUptimeLoading(serviceId) {
+      const item = this.uptimeCache[serviceId];
+      return !item || item.loading;
+    },
+
+    getUptimeCellClass(serviceId, day) {
+      if (this.isUptimeLoading(serviceId)) {
+        return 'status-skeleton';
+      }
+      if (!day || day.totalChecks === 0) {
+        return 'status-nodata';
+      }
+      const pct = day.uptimePercentage !== undefined ? day.uptimePercentage : 0;
+      if (pct >= 99) return 'status-perfect';
+      if (pct >= 90) return 'status-degraded';
+      return 'status-down';
+    },
+
+    getUptimeTooltip(serviceId, day) {
+      if (this.isUptimeLoading(serviceId)) {
+        return 'Loading telemetry...';
+      }
+      if (!day || day.totalChecks === 0) {
+        return `${day && day.date ? day.date : 'Day'}: No data recorded`;
+      }
+      const pct = window.Format.percentage(day.uptimePercentage);
+      return `${day.date}: ${pct} (${day.onlineChecks}/${day.totalChecks} checks online)`;
+    },
+
+    getAverageUptime(serviceId) {
+      const item = this.uptimeCache[serviceId];
+      if (!item || !item.data || item.data.length === 0) return '—';
+      const activeDays = item.data.filter(d => d.totalChecks > 0);
+      if (activeDays.length === 0) return 'No data';
+      const sum = activeDays.reduce((acc, d) => acc + (d.uptimePercentage || 0), 0);
+      return window.Format.percentage(sum / activeDays.length);
+    },
+
     /* ------------------- Side Panel: Service Details, Runbooks, Incidents ------------------- */
     openServicePanel(service, tab = 'overview') {
       this.selectedService = service;
@@ -454,6 +564,8 @@ document.addEventListener('alpine:init', () => {
         this.loadServiceRunbooks(service.id);
       } else if (tab === 'incidents') {
         this.loadServiceIncidents(service.id);
+      } else if (tab === 'uptime') {
+        this.requestUptime(service.id);
       }
     },
 
@@ -470,6 +582,8 @@ document.addEventListener('alpine:init', () => {
         this.loadServiceRunbooks(this.selectedService.id);
       } else if (tab === 'incidents') {
         this.loadServiceIncidents(this.selectedService.id);
+      } else if (tab === 'uptime') {
+        this.requestUptime(this.selectedService.id);
       }
     },
 
