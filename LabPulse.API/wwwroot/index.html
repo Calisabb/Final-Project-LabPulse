@@ -351,7 +351,7 @@
                           type="button"
                           class="btn btn-secondary btn-sm"
                           @click="checkSingleService(service)"
-                          :disabled="checkingServiceIds[service.id]"
+                          :disabled="!!checkingServiceIds[service.id]"
                           aria-label="Probe service status"
                         >
                           <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true"></span>
@@ -607,7 +607,7 @@
                       type="button"
                       class="btn btn-secondary btn-sm"
                       @click="checkSingleService(selectedService)"
-                      :disabled="selectedService && checkingServiceIds[selectedService.id]"
+                      :disabled="!!(selectedService && checkingServiceIds[selectedService.id])"
                     >
                       <span x-show="selectedService && checkingServiceIds[selectedService.id]" class="spinner" aria-hidden="true"></span>
                       <span x-text="(selectedService && checkingServiceIds[selectedService.id]) ? 'Checking...' : '⚡ Probe Now'"></span>
