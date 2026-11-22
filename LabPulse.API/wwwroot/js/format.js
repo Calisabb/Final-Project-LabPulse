@@ -163,6 +163,32 @@ const Format = {
     const port = service.port ? `:${service.port}` : '';
     const path = service.healthPath ? (service.healthPath.startsWith('/') ? service.healthPath : `/${service.healthPath}`) : '';
     return `${protocol}://${service.host}${port}${path}`;
+  },
+
+  /**
+   * Map a service icon string to an SVG symbol id.
+   * Falls back to 'server' for unknown or empty values.
+   * @param {string|null|undefined} icon
+   * @returns {string} symbol id without '#'
+   */
+  iconSymbol(icon) {
+    const map = {
+      server: 'server', srv: 'server', host: 'server', vm: 'server', vps: 'server',
+      database: 'database', db: 'database', sql: 'database', postgres: 'database',
+      mysql: 'database', mongo: 'database', redis: 'database',
+      container: 'container', docker: 'container', k8s: 'container', kubernetes: 'container', pod: 'container',
+      web: 'globe', http: 'globe', https: 'globe', site: 'globe', globe: 'globe', url: 'globe',
+      router: 'router', network: 'router', gateway: 'router', switch: 'router', firewall: 'router',
+      media: 'film', plex: 'film', jellyfin: 'film', film: 'film', video: 'film', stream: 'film',
+      terminal: 'terminal', ssh: 'terminal', cli: 'terminal', shell: 'terminal',
+      security: 'shield', auth: 'shield', shield: 'shield', vpn: 'shield', proxy: 'shield',
+      cloud: 'cloud', s3: 'cloud', storage: 'cloud', backup: 'cloud',
+      cpu: 'cpu', monitor: 'cpu', metrics: 'cpu', grafana: 'cpu', prometheus: 'cpu',
+      folder: 'folder', files: 'folder', nas: 'folder', smb: 'folder'
+    };
+    if (!icon) return 'server';
+    const key = String(icon).toLowerCase().trim();
+    return map[key] || 'server';
   }
 };
 
