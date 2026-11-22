@@ -53,12 +53,12 @@ internal class HealthLogRepositoryAsync : IHealthLogRepositoryAsync
         return await _dbContext.HealthLogs
             .Where(h => h.ServiceId == serviceId && h.CheckedAt >= from)
             .GroupBy(h => h.CheckedAt.Date)
+            .OrderBy(g => g.Key)   
             .Select(g => new DailyHealthStat(
                 Date: g.Key,
                 Total: g.Count(),
                 Online: g.Count(h => h.IsOnline)
             ))
-            .OrderBy(s => s.Date)
             .ToListAsync();
     }
 }
