@@ -28,7 +28,7 @@
   backdrop-filter: var(--blur-header);
   -webkit-backdrop-filter: var(--blur-header);
   border-bottom: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 .header-container {
@@ -208,6 +208,16 @@
   background: var(--status-offline-bg);
   color: #fb7185;
   border: 1px solid var(--status-offline-border);
+  animation: pulseOfflinePill 2s infinite ease-in-out;
+}
+
+@keyframes pulseOfflinePill {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(244, 63, 94, 0.35);
+  }
 }
 
 .status-badge.unknown {
@@ -407,8 +417,11 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-4);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--color-beacon-cyan);
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.08) 0%, transparent 100%);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .category-title {
@@ -432,7 +445,7 @@
 .service-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 /* 6. Service Card (Frosted Glass Surface) */
@@ -442,19 +455,22 @@
   backdrop-filter: var(--blur-card);
   -webkit-backdrop-filter: var(--blur-card);
   border: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card), var(--glass-highlight);
-  padding: var(--space-4);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
   cursor: pointer;
+  min-width: 0;
 }
 
 .service-card:hover {
   background: var(--glass-card-hover);
   border-color: var(--glass-border-hover);
+  border-top-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
   box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.5), var(--glass-highlight);
 }
@@ -475,15 +491,14 @@
 }
 
 .service-icon-box {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
   color: var(--color-beacon-cyan);
   flex-shrink: 0;
 }
@@ -529,9 +544,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding: var(--space-1) 0;
   font-size: 0.75rem;
+  gap: var(--space-2);
 }
 
 .telemetry-pill {
@@ -565,6 +580,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: var(--space-2) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .uptime-strip-label {
@@ -1051,9 +1069,12 @@
   .header-container {
     flex-direction: column;
     align-items: stretch;
+    padding: var(--space-3);
   }
   .header-actions {
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
   .toolbar-row {
     flex-direction: column;
@@ -1064,5 +1085,36 @@
   }
   .form-row-2 {
     grid-template-columns: 1fr;
+  }
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+  .side-panel {
+    max-width: 100%;
+  }
+  .modal-dialog {
+    margin: var(--space-2);
+    max-width: 100%;
+  }
+  .card-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-container, .toolbar-section, .main-content {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+  .btn-sm {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.7rem;
+  }
+  .nav-tab-btn {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+  }
+  .service-card {
+    padding: var(--space-3);
   }
 }

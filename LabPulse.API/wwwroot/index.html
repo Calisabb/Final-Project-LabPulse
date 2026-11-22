@@ -340,6 +340,19 @@
                       <!-- Description -->
                       <p class="service-description" x-text="service.description || 'No description provided.'"></p>
 
+                      <!-- Telemetry Status Bar -->
+                      <div class="card-status-bar">
+                        <span class="telemetry-pill">
+                          <span>Latency:</span>
+                          <strong class="response-time" x-text="window.Format.responseTime(service.lastResponceTimeMs)"></strong>
+                        </span>
+
+                        <span class="telemetry-pill" :title="window.Format.dateTime(service.lastCheckedAt)">
+                          <span>Checked:</span>
+                          <span x-text="window.Format.relativeTime(service.lastCheckedAt)"></span>
+                        </span>
+                      </div>
+
                       <!-- 30-day Uptime Strip -->
                       <div class="uptime-strip-container" @click.stop="openServicePanel(service, 'uptime')">
                         <div class="uptime-strip-label">
@@ -355,19 +368,6 @@
                             ></div>
                           </template>
                         </div>
-                      </div>
-
-                      <!-- Telemetry Status Bar -->
-                      <div class="card-status-bar">
-                        <span class="telemetry-pill">
-                          <span>Latency:</span>
-                          <strong class="response-time" x-text="window.Format.responseTime(service.lastResponceTimeMs)"></strong>
-                        </span>
-
-                        <span class="telemetry-pill" :title="window.Format.dateTime(service.lastCheckedAt)">
-                          <span>Checked:</span>
-                          <span x-text="window.Format.relativeTime(service.lastCheckedAt)"></span>
-                        </span>
                       </div>
 
                       <!-- Probe Error Snippet (if any) -->
