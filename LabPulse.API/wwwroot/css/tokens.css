@@ -8,20 +8,25 @@
   --color-beacon-cyan: #06b6d4;
   --color-sonar-teal: #14b8a6;
 
+  /* Backdrop accent colors (used by base.css body::before) */
+  --color-deep-sea: rgba(2, 60, 100, 0.55);    /* deep sea blue field */
+  --color-teal-glow: rgba(14, 184, 166, 0.35); /* teal field */
+  --color-amber-accent: rgba(217, 119, 6, 0.22); /* warm amber corner */
+
   /* 2. Frosted Glass Surfaces (Translucent + Specular Highlights) */
-  --glass-header: rgba(11, 20, 31, 0.72);
-  --glass-card: rgba(15, 27, 41, 0.62);
-  --glass-card-hover: rgba(22, 38, 56, 0.75);
-  --glass-panel: rgba(12, 22, 34, 0.86);
-  --glass-modal: rgba(10, 18, 29, 0.92);
-  --glass-toast: rgba(14, 24, 38, 0.88);
-  --glass-input: rgba(8, 16, 26, 0.65);
+  --glass-header: rgba(14, 24, 36, 0.78);
+  --glass-card: rgba(18, 32, 48, 0.72);
+  --glass-card-hover: rgba(26, 44, 64, 0.82);
+  --glass-panel: rgba(14, 26, 40, 0.90);
+  --glass-modal: rgba(10, 20, 32, 0.94);
+  --glass-toast: rgba(16, 28, 44, 0.92);
+  --glass-input: rgba(8, 18, 30, 0.75);
 
   /* Specular border & highlight */
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.22);
   --glass-border-focus: rgba(6, 182, 212, 0.65);
-  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
 
   /* 3. Semantic Signal Colors (Maritime / Control Room Status) */
   --status-online: #10b981;

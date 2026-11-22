@@ -74,38 +74,38 @@ body {
   position: relative;
 }
 
-/* Atmospheric Night Backdrop with Soft Shifting Color Fields */
+/* Atmospheric Night Backdrop with Richer Shifting Color Fields */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle 800px at 15% 10%, rgba(6, 182, 212, 0.08), transparent 70%),
-    radial-gradient(circle 900px at 85% 80%, rgba(20, 184, 166, 0.06), transparent 70%),
-    radial-gradient(circle 600px at 50% 50%, rgba(14, 165, 233, 0.04), transparent 60%),
-    linear-gradient(180deg, #070d14 0%, #0a131e 50%, #060b10 100%);
-  background-size: 140% 140%;
-  animation: ambientShift 32s ease-in-out infinite alternate;
+    radial-gradient(ellipse 900px 700px at 10% 15%, rgba(2, 60, 100, 0.55), transparent 65%),
+    radial-gradient(ellipse 800px 600px at 85% 75%, rgba(14, 184, 166, 0.35), transparent 60%),
+    radial-gradient(ellipse 400px 350px at 90% 8%, rgba(217, 119, 6, 0.22), transparent 55%),
+    linear-gradient(165deg, #060c14 0%, #0a1520 55%, #060b10 100%);
+  animation: backdropDrift 40s ease-in-out infinite alternate;
   pointer-events: none;
 }
 
-@keyframes ambientShift {
-  0% { background-position: 0% 0%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 100%; }
+@keyframes backdropDrift {
+  0%   { background-position: 0% 0%, 100% 100%, 100% 0%, 0% 0%; }
+  33%  { background-position: 20% 10%, 80% 90%, 85% 5%, 0% 0%; }
+  66%  { background-position: 10% 25%, 90% 70%, 95% 15%, 0% 0%; }
+  100% { background-position: 5% 15%, 85% 85%, 90% 10%, 0% 0%; }
 }
 
 /* Fallback for browsers that do not support backdrop-filter */
 @supports not (backdrop-filter: blur(10px)) {
   :root {
-    --glass-header: #0e1824;
-    --glass-card: #121e2c;
-    --glass-card-hover: #172738;
-    --glass-panel: #0d1723;
-    --glass-modal: #0b1420;
-    --glass-toast: #132030;
-    --glass-input: #09121c;
+    --glass-header: #0f1c2c;
+    --glass-card: #131f30;
+    --glass-card-hover: #1a2d42;
+    --glass-panel: #0e1c2e;
+    --glass-modal: #0b1724;
+    --glass-toast: #102030;
+    --glass-input: #091422;
   }
 }
 
