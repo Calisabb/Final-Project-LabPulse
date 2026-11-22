@@ -56,7 +56,7 @@
       <div class="toast" :class="'toast-' + toast.type" role="alert">
         <span x-text="toast.message"></span>
         <button type="button" class="btn-icon btn-sm" aria-label="Dismiss notification" @click="$store.toasts.remove(toast.id)">
-          &times;
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
         </button>
       </div>
     </template>
@@ -168,12 +168,13 @@
               aria-label="Probe all monitored services"
             >
               <span x-show="isCheckingAll" class="spinner" aria-hidden="true"></span>
-              <span x-text="isCheckingAll ? 'Checking all...' : '⚡ Check all'"></span>
+              <svg class="icon" aria-hidden="true" x-show="!isCheckingAll"><use href="#icon-bolt"></use></svg>
+              <span x-text="isCheckingAll ? 'Checking all...' : 'Check all'"></span>
             </button>
 
             <!-- Add Service Button -->
             <button type="button" class="btn btn-primary btn-sm" @click="openCreateServiceModal" aria-label="Add monitored service">
-              <span>+ Add Service</span>
+              <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add Service
             </button>
 
             <div class="telemetry-pill">
@@ -182,7 +183,7 @@
             </div>
 
             <button type="button" class="btn btn-secondary btn-sm" @click="handleLogout" aria-label="Sign out">
-              Sign out
+              <svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg> Sign out
             </button>
           </div>
         </div>
@@ -196,7 +197,7 @@
             <div class="toolbar-row">
               <!-- Search box -->
               <div class="search-box">
-                <span class="search-icon" aria-hidden="true">🔍</span>
+                <span class="search-icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg></span>
                 <input
                   type="text"
                   class="search-input"
@@ -211,7 +212,7 @@
                   @click="searchQuery = ''"
                   aria-label="Clear search query"
                 >
-                  &times;
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
                 </button>
               </div>
 
@@ -280,19 +281,19 @@
 
             <!-- Empty State: No services configured at all -->
             <div x-show="!loadingServices && services.length === 0" class="empty-state">
-              <div class="empty-icon">📡</div>
+              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-broadcast"></use></svg></div>
               <h2 style="font-size: 1.125rem;">No services monitored yet</h2>
               <p style="font-size: 0.8125rem; color: var(--text-muted); max-width: 420px;">
                 Start monitoring your homelab servers, docker containers, and internal applications by adding your first service.
               </p>
               <button type="button" class="btn btn-primary" @click="openCreateServiceModal">
-                + Add your first service
+                <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add your first service
               </button>
             </div>
 
             <!-- Empty State: Filter matched nothing -->
             <div x-show="!loadingServices && services.length > 0 && filteredServices.length === 0" class="empty-state">
-              <div class="empty-icon">🔍</div>
+              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-search"></use></svg></div>
               <h2 style="font-size: 1.125rem;">No matching services found</h2>
               <p style="font-size: 0.8125rem; color: var(--text-muted);">
                 No monitored endpoints match the active filters or search terms.
@@ -319,7 +320,7 @@
                       <div class="card-top">
                         <div class="service-identity">
                           <div class="service-icon-box">
-                            <span x-text="service.icon || '🖥️'"></span>
+                            <svg class="icon icon-lg" aria-hidden="true"><use :href="'#icon-' + window.Format.iconSymbol(service.icon)"></use></svg>
                           </div>
                           <div class="service-meta">
                             <h3 class="service-name" x-text="service.name"></h3>
@@ -384,7 +385,8 @@
                           aria-label="Probe service status"
                         >
                           <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true"></span>
-                          <span x-text="checkingServiceIds[service.id] ? 'Checking...' : '⚡ Check'"></span>
+                          <svg class="icon" aria-hidden="true" x-show="!checkingServiceIds[service.id]"><use href="#icon-bolt"></use></svg>
+                          <span x-text="checkingServiceIds[service.id] ? 'Checking...' : 'Check'"></span>
                         </button>
 
                         <div style="display: flex; gap: var(--space-2);">
@@ -395,7 +397,7 @@
                             title="View service runbooks"
                             aria-label="View runbooks"
                           >
-                            📖 Runbooks
+                            <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg> Runbooks
                           </button>
                           <button
                             type="button"
@@ -404,7 +406,7 @@
                             title="Edit service configuration"
                             aria-label="Edit service"
                           >
-                            ✎
+                            <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
                           </button>
                           <button
                             type="button"
@@ -413,7 +415,7 @@
                             title="Delete service"
                             aria-label="Delete service"
                           >
-                            🗑
+                            <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
                           </button>
                         </div>
                       </div>
@@ -450,7 +452,8 @@
                 :disabled="loadingIncidents"
               >
                 <span x-show="loadingIncidents" class="spinner" aria-hidden="true"></span>
-                <span x-text="loadingIncidents ? 'Refreshing...' : '🔄 Refresh'"></span>
+                <svg class="icon" aria-hidden="true" x-show="!loadingIncidents"><use href="#icon-refresh"></use></svg>
+                <span x-text="loadingIncidents ? 'Refreshing...' : 'Refresh'"></span>
               </button>
             </div>
           </div>
@@ -463,7 +466,7 @@
 
           <!-- Incidents Empty State -->
           <div x-show="!loadingIncidents && incidents.length === 0" class="empty-state">
-            <div class="empty-icon" style="color: #34d399;">✓</div>
+            <div class="empty-icon" style="color: #34d399;"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-check"></use></svg></div>
             <h2 style="font-size: 1.125rem;">No incidents reported</h2>
             <p style="font-size: 0.8125rem; color: var(--text-muted);">
               <span x-text="incidentsOnlyOpen ? 'There are currently no unresolved service outages.' : 'No service outages have occurred.'"></span>
@@ -519,7 +522,7 @@
           <div class="panel-header">
             <div style="display: flex; align-items: center; gap: var(--space-3); min-width: 0;">
               <div class="service-icon-box">
-                <span x-text="selectedService ? (selectedService.icon || '🖥️') : '🖥️'"></span>
+                <svg class="icon icon-lg" aria-hidden="true"><use :href="selectedService ? '#icon-' + window.Format.iconSymbol(selectedService.icon) : '#icon-server'"></use></svg>
               </div>
               <div style="min-width: 0;">
                 <h2 id="side-panel-title" style="font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="selectedService ? selectedService.name : 'Service Details'"></h2>
@@ -537,7 +540,7 @@
               </div>
 
               <button type="button" class="btn-icon btn-sm" @click="closeServicePanel" aria-label="Close side panel">
-                &times;
+                <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
               </button>
             </div>
           </div>
@@ -639,7 +642,8 @@
                       :disabled="!!(selectedService && checkingServiceIds[selectedService.id])"
                     >
                       <span x-show="selectedService && checkingServiceIds[selectedService.id]" class="spinner" aria-hidden="true"></span>
-                      <span x-text="(selectedService && checkingServiceIds[selectedService.id]) ? 'Checking...' : '⚡ Probe Now'"></span>
+                      <svg class="icon" aria-hidden="true" x-show="!(selectedService && checkingServiceIds[selectedService.id])"><use href="#icon-bolt"></use></svg>
+                      <span x-text="(selectedService && checkingServiceIds[selectedService.id]) ? 'Checking...' : 'Probe Now'"></span>
                     </button>
                   </div>
 
@@ -650,10 +654,10 @@
 
                 <div style="display: flex; gap: var(--space-3); margin-top: auto;">
                   <button type="button" class="btn btn-secondary" style="flex: 1;" @click="openEditServiceModal(selectedService)">
-                    ✎ Edit Configuration
+                    <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg> Edit Configuration
                   </button>
                   <button type="button" class="btn btn-danger" @click="confirmDeleteService(selectedService)">
-                    🗑 Delete Service
+                    <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> Delete Service
                   </button>
                 </div>
               </div>
@@ -734,7 +738,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <h3 style="font-size: 0.9375rem;">Operational Runbooks</h3>
                   <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
-                    + Add Runbook
+                    <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add Runbook
                   </button>
                 </div>
 
@@ -746,13 +750,13 @@
 
                 <!-- Empty state -->
                 <div x-show="!loadingRunbooks && serviceRunbooks.length === 0" class="empty-state">
-                  <div class="empty-icon">📖</div>
+                  <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-book"></use></svg></div>
                   <h4 style="font-size: 0.9375rem;">No runbooks yet</h4>
                   <p style="font-size: 0.8125rem; color: var(--text-muted);">
                     Document disaster recovery commands, container restart snippets, or diagnostic steps.
                   </p>
                   <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
-                    + Create first runbook
+                    <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Create first runbook
                   </button>
                 </div>
 
@@ -773,7 +777,7 @@
                           title="Edit runbook"
                           aria-label="Edit runbook"
                         >
-                          ✎
+                          <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
                         </button>
                         <button
                           type="button"
@@ -783,7 +787,7 @@
                           title="Delete runbook"
                           aria-label="Delete runbook"
                         >
-                          🗑
+                          <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
                         </button>
                       </div>
                     </div>
@@ -796,7 +800,9 @@
                         @click="copyCommand(rb)"
                         aria-label="Copy command snippet"
                       >
-                        <span x-text="copiedRunbookId === rb.id ? '✓ Copied!' : '📋 Copy'"></span>
+                        <svg class="icon" aria-hidden="true" x-show="copiedRunbookId !== rb.id"><use href="#icon-copy"></use></svg>
+                        <svg class="icon" aria-hidden="true" x-show="copiedRunbookId === rb.id"><use href="#icon-check"></use></svg>
+                        <span x-text="copiedRunbookId === rb.id ? 'Copied!' : 'Copy'"></span>
                       </button>
                       <code x-text="rb.commandText"></code>
                     </div>
@@ -819,7 +825,9 @@
                     @click="loadServiceIncidents(selectedService.id)"
                     :disabled="loadingServiceIncidents"
                   >
-                    🔄 Refresh
+                    <span x-show="loadingServiceIncidents" class="spinner" aria-hidden="true"></span>
+                    <svg class="icon" aria-hidden="true" x-show="!loadingServiceIncidents"><use href="#icon-refresh"></use></svg>
+                    <span>Refresh</span>
                   </button>
                 </div>
 
@@ -829,7 +837,7 @@
                 </div>
 
                 <div x-show="!loadingServiceIncidents && serviceIncidents.length === 0" class="empty-state">
-                  <div class="empty-icon" style="color: #34d399;">✓</div>
+                  <div class="empty-icon" style="color: #34d399;"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-check"></use></svg></div>
                   <h4 style="font-size: 0.9375rem;">Clean track record</h4>
                   <p style="font-size: 0.8125rem; color: var(--text-muted);">
                     No outages or incident logs recorded for this endpoint.
@@ -880,7 +888,7 @@
           <div class="modal-header">
             <h2 id="runbook-modal-title" style="font-size: 1rem;" x-text="isRunbookEditMode ? 'Edit Runbook' : 'Add Runbook'"></h2>
             <button type="button" class="btn-icon btn-sm" @click="closeRunbookModal" aria-label="Close dialog">
-              &times;
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
             </button>
           </div>
 
@@ -970,7 +978,7 @@
           <div class="modal-header">
             <h2 id="service-modal-title" style="font-size: 1rem;" x-text="isEditMode ? 'Edit Monitored Service' : 'Add New Monitored Service'"></h2>
             <button type="button" class="btn-icon btn-sm" @click="closeServiceModal" aria-label="Close dialog">
-              &times;
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
             </button>
           </div>
 
@@ -1096,7 +1104,7 @@
                     type="text"
                     class="form-input"
                     x-model="serviceForm.icon"
-                    placeholder="e.g. 🖥️, 🗄️, 🌐, docker"
+                    placeholder="e.g. server, database, docker, web"
                     maxlength="50"
                   >
                   <span x-show="serviceFormErrors.icon" class="form-error" x-text="serviceFormErrors.icon"></span>
@@ -1149,7 +1157,7 @@
           <div class="modal-header">
             <h2 id="delete-modal-title" style="font-size: 1rem; color: #fb7185;">Confirm Deletion</h2>
             <button type="button" class="btn-icon btn-sm" @click="closeDeleteModal" aria-label="Close dialog">
-              &times;
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
             </button>
           </div>
 

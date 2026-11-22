@@ -1,5 +1,24 @@
 /* LabPulse Components: Frosted Glass UI */
 
+/* 0. Inline SVG Icons */
+.icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.icon-lg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 /* 1. Header & Navigation */
 .app-header {
   position: sticky;
