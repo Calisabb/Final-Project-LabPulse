@@ -4,13 +4,28 @@
  */
 const Format = {
   /**
+   * Parse an API date value as UTC. The API returns ISO strings without a
+   * trailing 'Z', so JavaScript would otherwise interpret them as local time.
+   * @param {string|Date|null} dateVal
+   * @returns {Date}
+   */
+  parseApiDate(dateVal) {
+    if (dateVal instanceof Date) return dateVal;
+    if (typeof dateVal === 'string' && dateVal.length > 0) {
+      const hasOffset = dateVal.endsWith('Z') || /[+\-]\d{2}:\d{2}$/.test(dateVal);
+      return new Date(hasOffset ? dateVal : dateVal + 'Z');
+    }
+    return new Date(dateVal);
+  },
+
+  /**
    * Format ISO date string into readable date and time.
    * @param {string|Date|null} dateVal
    * @returns {string}
    */
   dateTime(dateVal) {
     if (!dateVal) return 'Never';
-    const date = typeof dateVal === 'string' ? new Date(dateVal) : dateVal;
+    const date = this.parseApiDate(dateVal);
     if (isNaN(date.getTime())) return 'Invalid date';
     return date.toLocaleString(undefined, {
       month: 'short',
@@ -28,7 +43,7 @@ const Format = {
    */
   relativeTime(dateVal) {
     if (!dateVal) return 'Never';
-    const date = typeof dateVal === 'string' ? new Date(dateVal) : dateVal;
+    const date = this.parseApiDate(dateVal);
     if (isNaN(date.getTime())) return 'Unknown';
 
     const now = Date.now();
