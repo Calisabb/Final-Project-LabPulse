@@ -43,6 +43,11 @@ public class HealthCheckWorker : BackgroundService
     }
     private async Task RunCycleAsync(CancellationToken ct)
     {
+        if (ct.IsCancellationRequested)
+        {
+            return;
+        }
+
         try
         {
             using var scope = _scopeFactory.CreateScope();
@@ -55,7 +60,7 @@ public class HealthCheckWorker : BackgroundService
                 result.Total, result.Online, result.Offline
                 );
 
-            if (DateTime.UtcNow - _lastCleanup >= CleanupEvery)
+            if (!ct.IsCancellationRequested && DateTime.UtcNow - _lastCleanup >= CleanupEvery)
             {
                 var logs = scope.ServiceProvider.GetRequiredService<IHealthLogService>();
                 var deleted = await logs.CleanupOldLogsAsync();
@@ -66,11 +71,18 @@ public class HealthCheckWorker : BackgroundService
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            throw;
+            // Graceful shutdown
+        }
+        catch (ObjectDisposedException) when (ct.IsCancellationRequested)
+        {
+            // Graceful shutdown while host container is disposing
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Health check cycle failed");
+            if (!ct.IsCancellationRequested)
+            {
+                _logger.LogError(ex, "Health check cycle failed");
+            }
         }
     }
 }

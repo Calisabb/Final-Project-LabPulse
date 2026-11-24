@@ -142,6 +142,7 @@ namespace LabPulse.API
             using (var scope = app.Services.CreateScope())
             {
                 await AdminSeeder.SeedAsync(scope.ServiceProvider);
+                await DataSeeder.SeedAsync(scope.ServiceProvider);
             }
 
             await app.RunAsync();
