@@ -2168,6 +2168,226 @@
   color: #03070d;
 }
 
+/* ==========================================================================
+   eDEX Cyber Deletion Confirmation Modal
+   ========================================================================== */
+.edex-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(1, 4, 8, 0.86);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: edexModalFadeIn 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes edexModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.edex-confirm-dialog {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(6, 12, 22, 0.97);
+  border: 1px solid var(--edex-red);
+  border-radius: 2px;
+  box-shadow: 0 0 45px rgba(255, 42, 85, 0.32), inset 0 0 24px rgba(255, 42, 85, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: edexModalSlideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes edexModalSlideUp {
+  from { transform: translateY(16px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.edex-confirm-dialog::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 140px;
+  height: 48px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 42, 85, 0.08),
+    rgba(255, 42, 85, 0.08) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  pointer-events: none;
+}
+
+.edex-confirm-header {
+  padding: 10px 14px;
+  background: rgba(18, 6, 10, 0.95);
+  border-bottom: 1px solid rgba(255, 42, 85, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.edex-confirm-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--edex-red);
+}
+
+.edex-hazard-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--edex-red);
+  box-shadow: 0 0 8px var(--edex-red);
+  animation: hazardBlink 1.4s infinite ease-in-out;
+}
+
+@keyframes hazardBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); box-shadow: 0 0 2px var(--edex-red); }
+}
+
+.edex-confirm-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 42, 85, 0.3);
+  color: var(--edex-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all var(--transition-fast);
+}
+
+.edex-confirm-close-btn:hover {
+  color: #ffffff;
+  border-color: var(--edex-red);
+  background: rgba(255, 42, 85, 0.2);
+}
+
+.edex-confirm-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edex-confirm-target-box {
+  background: rgba(3, 7, 14, 0.9);
+  border: 1px solid var(--edex-border);
+  border-left: 3px solid var(--edex-red);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edex-confirm-target-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--edex-text-muted);
+  letter-spacing: 0.08em;
+}
+
+.edex-confirm-target-name {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edex-confirm-target-meta {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--edex-cyan);
+}
+
+.edex-confirm-warning-text {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: #c8d3e2;
+  background: rgba(255, 42, 85, 0.06);
+  border: 1px dashed rgba(255, 42, 85, 0.35);
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+
+.edex-confirm-footer {
+  padding: 10px 14px;
+  background: rgba(3, 7, 14, 0.95);
+  border-top: 1px solid var(--edex-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.edex-confirm-abort-btn {
+  background: rgba(10, 20, 32, 0.6);
+  border: 1px solid var(--edex-border);
+  color: var(--edex-text);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all var(--transition-fast);
+}
+
+.edex-confirm-abort-btn:hover {
+  color: #ffffff;
+  border-color: var(--edex-cyan);
+  background: rgba(0, 242, 255, 0.1);
+}
+
+.edex-confirm-purge-btn {
+  background: rgba(255, 42, 85, 0.18);
+  border: 1px solid var(--edex-red);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 6px 16px;
+  cursor: pointer;
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(255, 42, 85, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+
+.edex-confirm-purge-btn:hover:not(:disabled) {
+  background: var(--edex-red);
+  color: #03070d;
+  box-shadow: 0 0 20px rgba(255, 42, 85, 0.6);
+}
+
+.edex-confirm-purge-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Responsive adjustments for eDEX grid */
 @media (max-width: 1200px) {
   .edex-grid {

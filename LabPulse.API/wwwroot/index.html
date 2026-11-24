@@ -8,16 +8,16 @@
   <title>LabPulse · Homelab Operations</title>
 
   <!-- Local Vendored Stylesheets -->
-  <link rel="stylesheet" href="css/tokens.css?v=8">
-  <link rel="stylesheet" href="css/base.css?v=8">
-  <link rel="stylesheet" href="css/components.css?v=8">
+  <link rel="stylesheet" href="css/tokens.css?v=9">
+  <link rel="stylesheet" href="css/base.css?v=9">
+  <link rel="stylesheet" href="css/components.css?v=9">
 
   <!-- Local Vendored Application Scripts -->
   <script src="vendor/alpine.min.js" defer></script>
-  <script src="js/format.js?v=8"></script>
-  <script src="js/auth.js?v=8"></script>
-  <script src="js/api.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/format.js?v=9"></script>
+  <script src="js/auth.js?v=9"></script>
+  <script src="js/api.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 </head>
 <body x-data="app" class="app-reveal" x-cloak>
 
@@ -1283,39 +1283,99 @@
         </div>
       </div>
 
-      <!-- Delete Service Confirmation Modal -->
+      <!-- Cyber Delete Confirmation Modal -->
       <div
         x-show="isDeleteModalOpen"
-        class="modal-backdrop"
+        class="edex-confirm-backdrop"
         @keydown.escape.window="closeDeleteModal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="delete-modal-title"
+        aria-labelledby="edex-delete-modal-title"
+        x-cloak
       >
-        <div class="modal-dialog" style="max-width: 440px;" @click.outside="closeDeleteModal">
-          <div class="modal-header">
-            <h2 id="delete-modal-title" style="font-size: 1rem; color: #fb7185;">Confirm Deletion</h2>
-            <button type="button" class="btn-icon btn-sm" @click="closeDeleteModal" aria-label="Close dialog">
-              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+        <div class="edex-confirm-dialog" @click.outside="closeDeleteModal">
+          <!-- Cyber Modal Header -->
+          <div class="edex-confirm-header">
+            <div class="edex-confirm-title-wrap">
+              <span class="edex-hazard-led" aria-hidden="true"></span>
+              <span id="edex-delete-modal-title" x-text="deleteModalType === 'category' ? '[0xFA // CATEGORY_PURGE_CONFIRMATION]' : (deleteModalType === 'runbook' ? '[0xFA // RUNBOOK_PURGE_CONFIRMATION]' : '[0xFA // NODE_PURGE_CONFIRMATION]')"></span>
+            </div>
+            <button
+              type="button"
+              class="edex-confirm-close-btn"
+              @click="closeDeleteModal"
+              aria-label="Close dialog"
+            >
+              [ESC // ✕]
             </button>
           </div>
 
-          <div class="modal-body">
-            <p style="font-size: 0.875rem;">
-              Are you sure you want to delete <strong style="color: var(--text-bright);" x-text="serviceToDelete ? serviceToDelete.name : ''"></strong>?
-            </p>
-            <p style="font-size: 0.8125rem; color: var(--text-muted);">
-              All recorded health logs, incidents, and associated runbooks will be permanently removed.
-            </p>
+          <!-- Cyber Modal Body -->
+          <div class="edex-confirm-body">
+            <!-- Target Identification Box -->
+            <div class="edex-confirm-target-box">
+              <span class="edex-confirm-target-label">// TARGET_IDENTIFIER</span>
+              <div class="edex-confirm-target-name">
+                <template x-if="deleteModalType === 'service' && serviceToDelete">
+                  <span style="display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" style="color: var(--edex-red);" aria-hidden="true"><use :href="'#icon-' + (serviceToDelete.icon || 'server')"></use></svg>
+                    <span x-text="serviceToDelete.name"></span>
+                  </span>
+                </template>
+                <template x-if="deleteModalType === 'category' && deleteModalTarget">
+                  <span style="display: flex; align-items: center; gap: 8px;">
+                    <span class="category-color-badge" :style="'background-color: ' + deleteModalTarget.color"></span>
+                    <span x-text="deleteModalTarget.name"></span>
+                  </span>
+                </template>
+                <template x-if="deleteModalType === 'runbook' && deleteModalTarget">
+                  <span style="display: flex; align-items: center; gap: 8px;">
+                    <svg class="icon" style="color: var(--edex-cyan);" aria-hidden="true"><use href="#icon-terminal"></use></svg>
+                    <span x-text="deleteModalTarget.title"></span>
+                  </span>
+                </template>
+              </div>
+
+              <!-- Extra Meta Info (Host / Port / Type) -->
+              <div class="edex-confirm-target-meta" x-show="deleteModalType === 'service' && serviceToDelete">
+                <span>HOST: <strong style="color: #ffffff;" x-text="serviceToDelete ? serviceToDelete.host + ':' + serviceToDelete.port : ''"></strong></span>
+                <span style="margin: 0 6px;">//</span>
+                <span>PROTOCOL: <strong style="color: var(--edex-cyan);" x-text="serviceToDelete ? serviceToDelete.checkType : ''"></strong></span>
+              </div>
+            </div>
+
+            <!-- Failsafe Warning Notice -->
+            <div class="edex-confirm-warning-text">
+              <span style="color: var(--edex-red); font-weight: 700; display: block; margin-bottom: 4px;">// CRITICAL_FAILSAFE_WARNING:</span>
+              <template x-if="deleteModalType === 'service'">
+                <span>All recorded health telemetry logs, 30-day uptime sparklines, outage incident records, and linked operational runbooks will be permanently purged from the database ledger.</span>
+              </template>
+              <template x-if="deleteModalType === 'category'">
+                <span>This category cluster will be purged. Categories containing active monitored nodes cannot be deleted until nodes are migrated.</span>
+              </template>
+              <template x-if="deleteModalType === 'runbook'">
+                <span>This operational automation script will be permanently removed from this service runbook buffer.</span>
+              </template>
+            </div>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="closeDeleteModal">
-              Cancel
+          <!-- Cyber Modal Footer -->
+          <div class="edex-confirm-footer">
+            <button
+              type="button"
+              class="edex-confirm-abort-btn"
+              @click="closeDeleteModal"
+            >
+              [ABORT // ESC]
             </button>
-            <button type="button" class="btn btn-danger" @click="executeDeleteService" :disabled="deletingService">
-              <span x-show="deletingService" class="spinner" aria-hidden="true"></span>
-              <span x-text="deletingService ? 'Deleting...' : 'Delete Service'"></span>
+            <button
+              type="button"
+              class="edex-confirm-purge-btn"
+              @click="executeDelete"
+              :disabled="deletingService"
+            >
+              <span x-show="deletingService" class="spinner" aria-hidden="true" style="width: 12px; height: 12px; border-color: #ffffff; border-top-color: transparent;"></span>
+              <span x-text="deletingService ? 'PURGING...' : '[CONFIRM PURGE // DELETE]'"></span>
             </button>
           </div>
         </div>
