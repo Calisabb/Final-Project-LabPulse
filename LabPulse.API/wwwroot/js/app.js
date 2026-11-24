@@ -77,8 +77,18 @@ document.addEventListener('alpine:init', () => {
     },
     serviceFormErrors: {},
 
-    // Service Delete Confirmation Modal
+    // Audio SFX Engine State
+    sfxEnabled: window.Sound ? window.Sound.isEnabled : true,
+    toggleSfx() {
+      if (window.Sound) {
+        this.sfxEnabled = window.Sound.toggle();
+      }
+    },
+
+    // Cyber Deletion Confirmation Modal
     isDeleteModalOpen: false,
+    deleteModalType: 'service', // 'service' | 'category' | 'runbook'
+    deleteModalTarget: null,
     serviceToDelete: null,
     deletingService: false,
 
@@ -291,6 +301,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await navigator.clipboard.writeText(cmd);
         this.copiedQuickCmd = cmd;
+        if (window.Sound) window.Sound.copy();
         Alpine.store('toasts').show(`Copied: ${cmd.length > 40 ? cmd.slice(0, 40) + '...' : cmd}`, 'info', 2000);
         setTimeout(() => {
           if (this.copiedQuickCmd === cmd) {
@@ -497,6 +508,7 @@ document.addEventListener('alpine:init', () => {
       if (!service || !service.id) return;
       const id = service.id;
 
+      if (window.Sound) window.Sound.ping();
       this.checkingServiceIds = { ...this.checkingServiceIds, [id]: true };
 
       try {
@@ -542,6 +554,7 @@ document.addEventListener('alpine:init', () => {
     async checkAllServices() {
       if (this.isCheckingAll) return;
       this.isCheckingAll = true;
+      if (window.Sound) window.Sound.sweep();
 
       try {
         const res = await window.Api.checkAll();
@@ -841,19 +854,9 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async deleteRunbook(runbook) {
-      if (!runbook || !confirm(`Delete runbook "${runbook.title}"?`)) return;
-
-      this.deletingRunbookId = runbook.id;
-      try {
-        await window.Api.deleteRunbook(runbook.id);
-        this.serviceRunbooks = this.serviceRunbooks.filter(r => r.id !== runbook.id);
-        Alpine.store('toasts').show(`Runbook "${runbook.title}" deleted`, 'info');
-      } catch (err) {
-        Alpine.store('toasts').show(`Failed to delete runbook: ${err.message}`, 'error');
-      } finally {
-        this.deletingRunbookId = null;
-      }
+    deleteRunbook(runbook) {
+      if (!runbook) return;
+      this.confirmDeleteRunbook(runbook);
     },
 
     async copyCommand(runbook) {
@@ -861,6 +864,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await navigator.clipboard.writeText(runbook.commandText);
         this.copiedRunbookId = runbook.id;
+        if (window.Sound) window.Sound.copy();
         setTimeout(() => {
           if (this.copiedRunbookId === runbook.id) {
             this.copiedRunbookId = null;
@@ -1042,23 +1046,55 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    /* ------------------- Service Delete Confirmation ------------------- */
+    /* ------------------- Cyber Delete Confirmation Modal ------------------- */
     confirmDeleteService(service) {
+      if (!service) return;
+      this.deleteModalType = 'service';
+      this.deleteModalTarget = service;
       this.serviceToDelete = service;
       this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
+    },
+
+    confirmDeleteCategory(cat) {
+      if (!cat) return;
+      this.deleteModalType = 'category';
+      this.deleteModalTarget = cat;
+      this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
+    },
+
+    confirmDeleteRunbook(runbook) {
+      if (!runbook) return;
+      this.deleteModalType = 'runbook';
+      this.deleteModalTarget = runbook;
+      this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
     },
 
     closeDeleteModal() {
       this.isDeleteModalOpen = false;
+      this.deleteModalTarget = null;
       this.serviceToDelete = null;
     },
 
+    async executeDelete() {
+      if (this.deleteModalType === 'service') {
+        await this.executeDeleteService();
+      } else if (this.deleteModalType === 'category') {
+        await this.executeDeleteCategory();
+      } else if (this.deleteModalType === 'runbook') {
+        await this.executeDeleteRunbook();
+      }
+    },
+
     async executeDeleteService() {
-      if (!this.serviceToDelete) return;
+      const target = this.deleteModalTarget || this.serviceToDelete;
+      if (!target) return;
 
       this.deletingService = true;
-      const id = this.serviceToDelete.id;
-      const name = this.serviceToDelete.name;
+      const id = target.id;
+      const name = target.name;
 
       try {
         await window.Api.deleteService(id);
@@ -1066,10 +1102,54 @@ document.addEventListener('alpine:init', () => {
         if (this.selectedService && this.selectedService.id === id) {
           this.closeServicePanel();
         }
-        Alpine.store('toasts').show(`Service "${name}" deleted`, 'info');
+        if (window.Sound) window.Sound.purge();
+        Alpine.store('toasts').show(`Service "${name}" purged`, 'info');
         this.closeDeleteModal();
       } catch (err) {
         Alpine.store('toasts').show(`Failed to delete service: ${err.message}`, 'error');
+      } finally {
+        this.deletingService = false;
+      }
+    },
+
+    async executeDeleteCategory() {
+      const cat = this.deleteModalTarget;
+      if (!cat) return;
+
+      this.deletingService = true;
+      try {
+        await window.Api.deleteCategory(cat.id);
+        this.categories = this.categories.filter(c => c.id !== cat.id);
+        if (this.selectedCategory === cat.id) {
+          this.selectedCategory = null;
+        }
+        if (this.isCategoryEditMode && this.categoryForm.id === cat.id) {
+          this.cancelCategoryEdit();
+        }
+        await this.loadServices(false);
+        if (window.Sound) window.Sound.purge();
+        Alpine.store('toasts').show(`Category "${cat.name}" purged`, 'info');
+        this.closeDeleteModal();
+      } catch (err) {
+        Alpine.store('toasts').show(err.message || 'Cannot delete category', 'error');
+      } finally {
+        this.deletingService = false;
+      }
+    },
+
+    async executeDeleteRunbook() {
+      const rb = this.deleteModalTarget;
+      if (!rb) return;
+
+      this.deletingService = true;
+      try {
+        await window.Api.deleteRunbook(rb.id);
+        this.serviceRunbooks = this.serviceRunbooks.filter(r => r.id !== rb.id);
+        if (window.Sound) window.Sound.purge();
+        Alpine.store('toasts').show(`Runbook "${rb.title}" purged`, 'info');
+        this.closeDeleteModal();
+      } catch (err) {
+        Alpine.store('toasts').show(`Failed to delete runbook: ${err.message}`, 'error');
       } finally {
         this.deletingService = false;
       }
@@ -1168,29 +1248,9 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async deleteCategory(cat) {
+    deleteCategory(cat) {
       if (!cat) return;
-      if (!confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
-        return;
-      }
-
-      this.deletingCategoryId = cat.id;
-      try {
-        await window.Api.deleteCategory(cat.id);
-        this.categories = this.categories.filter(c => c.id !== cat.id);
-        if (this.selectedCategory === cat.id) {
-          this.selectedCategory = null;
-        }
-        // If we were editing this category, reset form
-        if (this.isCategoryEditMode && this.categoryForm.id === cat.id) {
-          this.cancelCategoryEdit();
-        }
-        Alpine.store('toasts').show(`Category "${cat.name}" deleted`, 'info');
-      } catch (err) {
-        Alpine.store('toasts').show(err.message || 'Cannot delete category', 'error');
-      } finally {
-        this.deletingCategoryId = null;
-      }
+      this.confirmDeleteCategory(cat);
     },
 
     /* ------------------- Backup & Restore ------------------- */
