@@ -1,80 +1,91 @@
-/* LabPulse Design Tokens: Frosted Glass & Night Control Room */
+/* ==========================================================================
+   LabPulse Design Tokens: Homelab Server Blade & Telemetry Console (eDEX-UI)
+   ========================================================================== */
 :root {
-  /* 1. Base Night Control Room Palette (Deep Oceanic / Maritime Operations) */
-  --color-abyss: #070d14;
-  --color-hull: #0e1722;
-  --color-bulkhead: #162232;
-  --color-console: #1f3044;
-  --color-beacon-cyan: #06b6d4;
-  --color-sonar-teal: #14b8a6;
+  /* 1. Deep Obsidian & Server Chassis Palette */
+  --bg-obsidian: #05080e;
+  --bg-rack: #080d15;
+  --surface-blade: #0a111a;
+  --surface-blade-hover: #0e1724;
+  --surface-header: rgba(8, 13, 21, 0.92);
+  --surface-panel: #070c14;
+  --surface-modal: #080e17;
+  --surface-input: #03060a;
 
-  /* Backdrop accent colors (used by base.css body::before) */
-  --color-deep-sea: rgba(2, 60, 100, 0.55);    /* deep sea blue field */
-  --color-teal-glow: rgba(14, 184, 166, 0.35); /* teal field */
-  --color-amber-accent: rgba(217, 119, 6, 0.22); /* warm amber corner */
+  /* 2. Precision Hardware Borders & Specular Highlights */
+  --border-chassis: #141f2e;
+  --border-chassis-subtle: #0d1520;
+  --border-chassis-bright: #22344a;
+  --border-active: #00f2ff;
+  --highlight-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
 
-  /* 2. Frosted Glass Surfaces (Translucent + Specular Highlights) */
-  --glass-header: rgba(14, 24, 36, 0.78);
-  --glass-card: rgba(18, 32, 48, 0.72);
-  --glass-card-hover: rgba(26, 44, 64, 0.82);
-  --glass-panel: rgba(14, 26, 40, 0.90);
-  --glass-modal: rgba(10, 20, 32, 0.94);
-  --glass-toast: rgba(16, 28, 44, 0.92);
-  --glass-input: rgba(8, 18, 30, 0.75);
+  /* 3. Hardware Signal Accents & LEDs */
+  --accent-cyan: #00f2ff;
+  --accent-cyan-hover: #38f5ff;
+  --accent-cyan-dim: rgba(0, 242, 255, 0.1);
+  --accent-cyan-border: rgba(0, 242, 255, 0.3);
+  --accent-cyan-glow: 0 0 12px rgba(0, 242, 255, 0.35);
 
-  /* Specular border & highlight */
-  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-border-hover: rgba(255, 255, 255, 0.22);
-  --glass-border-focus: rgba(6, 182, 212, 0.65);
+  --led-green: #00ff88;
+  --led-green-dim: rgba(0, 255, 136, 0.1);
+  --led-green-border: rgba(0, 255, 136, 0.35);
+  --led-green-glow: 0 0 10px rgba(0, 255, 136, 0.45);
 
-  /* 3. Semantic Signal Colors (Maritime / Control Room Status) */
-  --status-online: #10b981;
-  --status-online-glow: rgba(16, 185, 129, 0.32);
-  --status-online-bg: rgba(16, 185, 129, 0.12);
-  --status-online-border: rgba(16, 185, 129, 0.35);
+  --led-ruby: #ff2a55;
+  --led-ruby-dim: rgba(255, 42, 85, 0.12);
+  --led-ruby-border: rgba(255, 42, 85, 0.4);
+  --led-ruby-glow: 0 0 12px rgba(255, 42, 85, 0.5);
 
-  --status-offline: #f43f5e;
-  --status-offline-glow: rgba(244, 63, 94, 0.45);
-  --status-offline-bg: rgba(244, 63, 94, 0.14);
-  --status-offline-border: rgba(244, 63, 94, 0.45);
+  --led-amber: #f59e0b;
+  --led-amber-dim: rgba(245, 158, 11, 0.1);
+  --led-amber-border: rgba(245, 158, 11, 0.35);
+
+  /* 4. Semantic Status Mappings */
+  --status-online: var(--led-green);
+  --status-online-bg: var(--led-green-dim);
+  --status-online-border: var(--led-green-border);
+  --status-online-glow: var(--led-green-glow);
+
+  --status-offline: var(--led-ruby);
+  --status-offline-bg: var(--led-ruby-dim);
+  --status-offline-border: var(--led-ruby-border);
+  --status-offline-glow: var(--led-ruby-glow);
 
   --status-unknown: #64748b;
-  --status-unknown-bg: rgba(100, 116, 139, 0.12);
-  --status-unknown-border: rgba(100, 116, 139, 0.30);
+  --status-unknown-bg: rgba(100, 116, 139, 0.1);
+  --status-unknown-border: rgba(100, 116, 139, 0.3);
 
-  --status-warning: #f59e0b;
-  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning: var(--led-amber);
+  --status-warning-bg: var(--led-amber-dim);
 
-  /* 4. Text Contrast (WCAG AA Compliant > 4.5:1 against dark glass) */
-  --text-bright: #f8fafc;
-  --text-main: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --brand-accent: var(--accent-cyan);
+  --brand-accent-glow: var(--accent-cyan-glow);
 
   /* 5. Typography */
-  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --text-bright: #ffffff;
+  --text-main: #d0d7e2;
+  --text-muted: #7b889b;
+  --text-dim: #455060;
+
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* 6. Hierarchy Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-panel: 18px;
-  --radius-full: 9999px;
+  /* 6. Structural Geometry */
+  --radius-sharp: 0px;
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-pill: 9999px;
 
-  /* 7. Blur Levels */
-  --blur-header: blur(14px) saturate(160%);
-  --blur-card: blur(12px) saturate(150%);
-  --blur-panel: blur(20px) saturate(180%);
-  --blur-modal: blur(24px) saturate(180%);
+  /* 7. Blur & Translucency */
+  --blur-deck: blur(16px) saturate(160%);
+  --blur-blade: blur(12px) saturate(150%);
+  --blur-modal: blur(20px) saturate(180%);
 
   /* 8. Shadows */
-  --shadow-sm: 0 2px 8px -2px rgba(0, 0, 0, 0.4);
-  --shadow-card: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
-  --shadow-panel: -12px 0 40px -4px rgba(0, 0, 0, 0.65);
-  --shadow-modal: 0 24px 64px -8px rgba(0, 0, 0, 0.75);
-  --shadow-toast: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+  --shadow-blade: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-blade-hover: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--border-chassis-bright);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.85);
 
   /* 9. Spacing Scale */
   --space-1: 0.25rem;
@@ -84,11 +95,10 @@
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
-  --space-10: 2.5rem;
 
   /* 10. Transitions */
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-smooth: 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 220ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 11. Z-Indices */
   --z-base: 1;
@@ -97,4 +107,38 @@
   --z-backdrop: 900;
   --z-modal: 1000;
   --z-toast: 1100;
+
+  /* 12. eDEX-UI / TRON Operations Terminal Theme Aliases */
+  --edex-bg: #03070d;
+  --edex-panel: rgba(6, 14, 24, 0.90);
+  --edex-panel-header: rgba(10, 22, 38, 0.96);
+  --edex-surface: rgba(8, 17, 28, 0.75);
+  --edex-border: #14283d;
+  --edex-border-bright: #00f2ff;
+  --edex-border-glow: 0 0 10px rgba(0, 242, 255, 0.35);
+  --edex-cyan: #00f2ff;
+  --edex-cyan-dim: rgba(0, 242, 255, 0.12);
+  --edex-green: #00ff88;
+  --edex-green-dim: rgba(0, 255, 136, 0.12);
+  --edex-red: #ff2a55;
+  --edex-red-dim: rgba(255, 42, 85, 0.15);
+  --edex-amber: #f59e0b;
+  --edex-amber-dim: rgba(245, 158, 11, 0.15);
+  --edex-text: #c8e1f5;
+  --edex-text-bright: #ffffff;
+  --edex-text-muted: #5e7a96;
+
+  /* Backward-compatible term aliases */
+  --term-bg: var(--edex-bg);
+  --term-surface: var(--edex-surface);
+  --term-header: var(--edex-panel-header);
+  --term-border: var(--edex-border);
+  --term-border-bright: var(--edex-border-bright);
+  --term-border-subtle: #0d1e2e;
+  --term-cyan: var(--edex-cyan);
+  --term-cyan-dim: var(--edex-cyan-dim);
+  --term-green: var(--edex-green);
+  --term-green-dim: var(--edex-green-dim);
+  --term-red: var(--edex-red);
+  --term-red-dim: var(--edex-red-dim);
 }

@@ -138,6 +138,71 @@ document.addEventListener('alpine:init', () => {
 
     // Auto-refresh timer
     refreshIntervalId: null,
+    tickerIntervalId: null,
+
+    // Real-time Clock, Session Uptime & Daemon Sweep State
+    currentTimeStr: '--:--:--',
+    currentDateStr: '---',
+    sessionUptimeSec: 0,
+    sweepCountdownSec: 30,
+
+    // eDEX Live Terminal Log Feed
+    probeLogs: [
+      { id: 1, time: 'SYS:BOOT', text: 'INIT // LabPulse telemetry grid online.', type: 'info' },
+      { id: 2, time: 'DAEMON', text: 'NETWORK // Subnet telemetry initialized. Sweeping at 30s cadence.', type: 'info' }
+    ],
+
+    // Quick Command Deck
+    copiedQuickCmd: null,
+    quickCommands: [
+      { label: 'RESTART DOCKER', cmd: 'docker compose down && docker compose up -d' },
+      { label: 'NGINX RELOAD', cmd: 'systemctl reload nginx && systemctl status nginx' },
+      { label: 'LABPULSE LOGS', cmd: 'journalctl -u labpulse -n 50 --no-pager' },
+      { label: 'PROBE HTTP 80', cmd: 'curl -Iv http://localhost:80' },
+      { label: 'FIREWALL STS', cmd: 'ufw status numbered' },
+      { label: 'PING GATEWAY', cmd: 'ping -c 3 1.1.1.1' }
+    ],
+
+    // Live Homelab Telemetry Computed Getters
+    get onlineServicesCount() {
+      return this.services.filter(s => s.serviceStatus === 'Online').length;
+    },
+
+    get offlineServicesCount() {
+      return this.services.filter(s => s.serviceStatus === 'Offline').length;
+    },
+
+    get healthPercent() {
+      if (!this.services || this.services.length === 0) return 100;
+      return Math.round((this.onlineServicesCount / this.services.length) * 100);
+    },
+
+    get averageLatencyMs() {
+      const active = this.services.filter(s => s.serviceStatus === 'Online' && (s.lastResponceTimeMs || s.lastResponseTimeMs));
+      if (active.length === 0) return null;
+      const sum = active.reduce((acc, s) => acc + (s.lastResponceTimeMs || s.lastResponseTimeMs || 0), 0);
+      return Math.round(sum / active.length);
+    },
+
+    get sessionUptimeFormatted() {
+      const h = Math.floor(this.sessionUptimeSec / 3600);
+      const m = Math.floor((this.sessionUptimeSec % 3600) / 60);
+      const s = this.sessionUptimeSec % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    },
+
+    get listeningPorts() {
+      if (!this.services || this.services.length === 0) return [];
+      return this.services.map(s => ({
+        id: s.id,
+        name: s.name,
+        host: s.host,
+        port: s.port,
+        type: s.checkType || 'HTTP',
+        status: s.serviceStatus || 'Offline',
+        latency: s.lastResponceTimeMs || s.lastResponseTimeMs || null
+      })).slice(0, 16);
+    },
 
     init() {
       // Listen for session changes (e.g. 401 expiry or manual logout)
@@ -187,6 +252,54 @@ document.addEventListener('alpine:init', () => {
           this.loadIncidents();
         }
       });
+
+      // Start Real-time Clock & Uptime Ticker
+      this.updateClock();
+      this.tickerIntervalId = setInterval(() => {
+        this.updateClock();
+      }, 1000);
+    },
+
+    updateClock() {
+      const now = new Date();
+      this.currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      this.currentDateStr = now.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+      this.sessionUptimeSec++;
+      if (this.sweepCountdownSec > 1) {
+        this.sweepCountdownSec--;
+      } else {
+        this.sweepCountdownSec = 30;
+      }
+    },
+
+    addProbeLog(text, type = 'info') {
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      this.probeLogs.unshift({ id: Date.now() + Math.random(), time, text, type });
+      if (this.probeLogs.length > 70) {
+        this.probeLogs.pop();
+      }
+    },
+
+    clearProbeLogs() {
+      this.probeLogs = [];
+      this.addProbeLog('BUFFER // Terminal probe log feed flushed.', 'info');
+    },
+
+    async copyQuickCommand(cmd) {
+      if (!cmd) return;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        this.copiedQuickCmd = cmd;
+        Alpine.store('toasts').show(`Copied: ${cmd.length > 40 ? cmd.slice(0, 40) + '...' : cmd}`, 'info', 2000);
+        setTimeout(() => {
+          if (this.copiedQuickCmd === cmd) {
+            this.copiedQuickCmd = null;
+          }
+        }, 1800);
+      } catch {
+        Alpine.store('toasts').show('Clipboard access denied', 'error');
+      }
     },
 
     async handleLogin() {
@@ -411,6 +524,8 @@ document.addEventListener('alpine:init', () => {
         // Invalidate uptime cache for this service so it refreshes with latest probe
         this.requestUptime(id, true);
 
+        this.addProbeLog(`PROBE // ${service.name} (${service.host}:${service.port}) -> ${isOnline ? 'HEALTHY' : 'ERR'} [${latency || 0}ms]`, isOnline ? 'success' : 'danger');
+
         const msg = isOnline
           ? `${service.name} is online (${window.Format.responseTime(latency)})`
           : `${service.name} is offline: ${errMsg || 'probe failed'}`;
@@ -465,6 +580,8 @@ document.addEventListener('alpine:init', () => {
         } else {
           await this.refreshServicesSilently();
         }
+
+        this.addProbeLog(`SWEEP // Bulk probe complete: ${online} ONLINE, ${offline} OFFLINE (Total: ${total})`, offline > 0 ? 'warning' : 'success');
 
         Alpine.store('toasts').show(
           `Checked ${total} services: ${online} online, ${offline} offline`,
