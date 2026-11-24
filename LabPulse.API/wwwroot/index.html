@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070d14">
+  <meta name="description" content="LabPulse - Homelab Service Monitoring & Health Operations Panel">
+  <title>LabPulse · Homelab Operations</title>
+
+  <!-- Local Vendored Stylesheets -->
+  <link rel="stylesheet" href="css/tokens.css?v=2">
+  <link rel="stylesheet" href="css/base.css?v=2">
+  <link rel="stylesheet" href="css/components.css?v=2">
+
+  <!-- Local Vendored Application Scripts -->
+  <script src="vendor/alpine.min.js" defer></script>
+  <script src="js/format.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
+</head>
+<body x-data="app" class="app-reveal" x-cloak>
+
+  <!-- SVG Icon Sprite (inline, display:none) -->
+  <svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Service type icons -->
+    <symbol id="icon-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1" fill="currentColor"/><circle cx="6" cy="18" r="1" fill="currentColor"/></symbol>
+    <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></symbol>
+    <symbol id="icon-container" viewBox="0 0 24 24"><path d="M20.9 7.5L12 2 3.1 7.5v9L12 22l8.9-5.5V7.5z"/><path d="M12 2v20M3.1 7.5l8.9 5.5 8.9-5.5"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="icon-router" viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="10" rx="2"/><path d="M6 9V5m4 4V5m4 4V5m4 4V5"/><circle cx="6" cy="14" r="1" fill="currentColor"/><circle cx="10" cy="14" r="1" fill="currentColor"/></symbol>
+    <symbol id="icon-film" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 7h5M17 17h5"/></symbol>
+    <symbol id="icon-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="icon-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></symbol>
+    <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+    <!-- UI action icons -->
+    <symbol id="icon-bolt" viewBox="0 0 24 24"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="icon-pencil" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="icon-broadcast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="icon-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  </svg>
+
+  <!-- Toast Notification Stack -->
+  <div class="toast-container" aria-live="polite" aria-atomic="true">
+    <template x-for="toast in $store.toasts.items" :key="toast.id">
+      <div class="toast" :class="'toast-' + toast.type" role="alert">
+        <span x-text="toast.message"></span>
+        <button type="button" class="btn-icon btn-sm" aria-label="Dismiss notification" @click="$store.toasts.remove(toast.id)">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <!-- Unauthenticated: Frosted Glass Login Screen -->
+  <template x-if="!isAuthenticated">
+    <main class="modal-backdrop" style="position: fixed; inset: 0; background: transparent; z-index: var(--z-sticky);">
+      <div class="modal-dialog" style="max-width: 400px; margin: auto;">
+        <div class="modal-header">
+          <div class="brand-section">
+            <span class="brand-pulse"></span>
+            <span class="brand-logo">LabPulse</span>
+          </div>
+          <span class="telemetry-pill">v1.0 · Ops</span>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="modal-body">
+          <div style="margin-bottom: var(--space-2);">
+            <h1 style="font-size: 1.125rem; margin-bottom: var(--space-1);">Operator sign in</h1>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              Enter credentials to access the homelab monitoring control room.
+            </p>
+          </div>
+
+          <!-- Session Expiry or Notice Alert -->
+          <div x-show="loginMessage" x-transition class="form-error" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); color: #67e8f9; padding: var(--space-3); border-radius: var(--radius-sm);" role="status">
+            <span x-text="loginMessage"></span>
+          </div>
+
+          <!-- Login Error Alert -->
+          <div x-show="loginError" x-transition class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+            <span x-text="loginError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="login-username" class="form-label">Username</label>
+            <input
+              id="login-username"
+              type="text"
+              class="form-input"
+              x-model="loginForm.userName"
+              placeholder="e.g. admin"
+              autocomplete="username"
+              required
+              autofocus
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              class="form-input"
+              x-model="loginForm.password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--space-2);" :disabled="loginLoading">
+            <span x-show="loginLoading" class="spinner" aria-hidden="true"></span>
+            <span x-text="loginLoading ? 'Authenticating...' : 'Sign in to console'"></span>
+          </button>
+        </form>
+      </div>
+    </main>
+  </template>
+
+  <!-- Authenticated Application Shell -->
+  <template x-if="isAuthenticated">
+    <div>
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-container">
+          <div class="brand-section">
+            <span class="brand-pulse"></span>
+            <span class="brand-logo">LabPulse</span>
+
+            <nav class="nav-tabs" aria-label="Main Navigation">
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': currentView === 'services' }"
+                @click="currentView = 'services'"
+              >
+                Services
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': currentView === 'incidents' }"
+                @click="currentView = 'incidents'"
+              >
+                Incidents
+              </button>
+            </nav>
+          </div>
+
+          <div class="header-actions">
+            <!-- Check All Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="checkAllServices"
+              :disabled="isCheckingAll || loadingServices"
+              aria-label="Probe all monitored services"
+            >
+              <span x-show="isCheckingAll" class="spinner" aria-hidden="true"></span>
+              <svg class="icon" aria-hidden="true" x-show="!isCheckingAll"><use href="#icon-bolt"></use></svg>
+              <span x-text="isCheckingAll ? 'Checking all...' : 'Check all'"></span>
+            </button>
+
+            <!-- Manage Categories Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="openCategoryModal"
+              aria-label="Manage categories"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+              <span>Categories</span>
+            </button>
+
+            <!-- JSON Backup Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="openBackupModal"
+              aria-label="Backup and restore"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+              <span>Backup</span>
+            </button>
+
+            <!-- Add Service Button -->
+            <button type="button" class="btn btn-primary btn-sm" @click="openCreateServiceModal" aria-label="Add monitored service">
+              <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add Service
+            </button>
+
+            <div class="telemetry-pill">
+              <span>Operator:</span>
+              <strong style="color: var(--text-bright);" x-text="userName"></strong>
+            </div>
+
+            <button type="button" class="btn btn-secondary btn-sm" @click="handleLogout" aria-label="Sign out">
+              <svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg> Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- 1. Services View -->
+      <template x-if="currentView === 'services'">
+        <div>
+          <!-- Filter Toolbar -->
+          <section class="toolbar-section" aria-label="Filters and search">
+            <div class="toolbar-row">
+              <!-- Search box -->
+              <div class="search-box">
+                <span class="search-icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg></span>
+                <input
+                  type="text"
+                  class="search-input"
+                  x-model="searchQuery"
+                  placeholder="Search service name or host..."
+                  aria-label="Search services"
+                >
+                <button
+                  type="button"
+                  x-show="searchQuery"
+                  class="search-clear"
+                  @click="searchQuery = ''"
+                  aria-label="Clear search query"
+                >
+                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+                </button>
+              </div>
+
+              <!-- Status filter segmented buttons -->
+              <div class="status-filters" role="group" aria-label="Status Filter">
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'all' }"
+                  @click="selectedStatus = 'all'"
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'online' }"
+                  @click="selectedStatus = 'online'"
+                >
+                  Online
+                </button>
+                <button
+                  type="button"
+                  class="status-filter-btn"
+                  :class="{ 'active': selectedStatus === 'offline' }"
+                  @click="selectedStatus = 'offline'"
+                >
+                  Offline
+                </button>
+              </div>
+            </div>
+
+            <!-- Category filter chips -->
+            <div class="category-chips" role="group" aria-label="Category Filter">
+              <button
+                type="button"
+                class="category-chip"
+                :class="{ 'active': selectedCategory === null }"
+                @click="selectedCategory = null"
+              >
+                All categories
+              </button>
+
+              <template x-for="cat in categories" :key="cat.id">
+                <button
+                  type="button"
+                  class="category-chip"
+                  :class="{ 'active': selectedCategory === cat.id }"
+                  @click="selectedCategory = (selectedCategory === cat.id ? null : cat.id)"
+                >
+                  <span class="chip-dot" :style="{ backgroundColor: cat.color || '#38bdf8' }"></span>
+                  <span x-text="cat.name"></span>
+                </button>
+              </template>
+            </div>
+          </section>
+
+          <!-- Main Services Content -->
+          <main class="main-content">
+            <!-- Loading Skeletons -->
+            <div x-show="loadingServices && services.length === 0" class="service-grid">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+
+            <!-- Empty State: No services configured at all -->
+            <div x-show="!loadingServices && services.length === 0" class="empty-state">
+              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-broadcast"></use></svg></div>
+              <h2 style="font-size: 1.125rem;">No services monitored yet</h2>
+              <p style="font-size: 0.8125rem; color: var(--text-muted); max-width: 420px;">
+                Start monitoring your homelab servers, docker containers, and internal applications by adding your first service.
+              </p>
+              <button type="button" class="btn btn-primary" @click="openCreateServiceModal">
+                <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add your first service
+              </button>
+            </div>
+
+            <!-- Empty State: Filter matched nothing -->
+            <div x-show="!loadingServices && services.length > 0 && filteredServices.length === 0" class="empty-state">
+              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-search"></use></svg></div>
+              <h2 style="font-size: 1.125rem;">No matching services found</h2>
+              <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                No monitored endpoints match the active filters or search terms.
+              </p>
+              <button type="button" class="btn btn-secondary btn-sm" @click="resetFilters">
+                Reset filters
+              </button>
+            </div>
+
+            <!-- Grouped Service Lists -->
+            <template x-for="group in groupedCategories" :key="group.category.id">
+              <section class="category-group">
+                <div class="category-group-header">
+                  <div class="category-title">
+                    <span class="chip-dot" :style="{ backgroundColor: group.category.color || '#38bdf8' }"></span>
+                    <span x-text="group.category.name"></span>
+                    <span class="category-count" x-text="group.services.length"></span>
+                  </div>
+                </div>
+
+                <div class="service-grid">
+                  <template x-for="service in group.services" :key="service.id">
+                    <article class="service-card" @click="openServicePanel(service, 'overview')">
+                      <div class="card-top">
+                        <div class="service-identity">
+                          <div class="service-icon-box">
+                            <svg class="icon icon-lg" aria-hidden="true"><use :href="'#icon-' + window.Format.iconSymbol(service.icon)"></use></svg>
+                          </div>
+                          <div class="service-meta">
+                            <h3 class="service-name" x-text="service.name"></h3>
+                            <div class="service-endpoint" :title="window.Format.endpoint(service)">
+                              <span x-text="window.Format.endpoint(service)"></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="status-badge" :class="window.Format.statusKey(service.serviceStatus)">
+                          <span class="status-dot" :class="window.Format.statusKey(service.serviceStatus)"></span>
+                          <span x-text="window.Format.statusLabel(service.serviceStatus)"></span>
+                        </div>
+                      </div>
+
+                      <!-- Description -->
+                      <p class="service-description" x-text="service.description || 'No description provided.'"></p>
+
+                      <!-- Telemetry Status Bar -->
+                      <div class="card-status-bar">
+                        <span class="telemetry-pill">
+                          <span>Latency:</span>
+                          <strong class="response-time" x-text="window.Format.responseTime(service.lastResponceTimeMs)"></strong>
+                        </span>
+
+                        <span class="telemetry-pill" :title="window.Format.dateTime(service.lastCheckedAt)">
+                          <span>Checked:</span>
+                          <span x-text="window.Format.relativeTime(service.lastCheckedAt)"></span>
+                        </span>
+                      </div>
+
+                      <!-- 30-day Uptime Strip -->
+                      <div class="uptime-strip-container" @click.stop="openServicePanel(service, 'uptime')">
+                        <div class="uptime-strip-label">
+                          <span>30-day uptime</span>
+                          <span style="font-family: var(--font-mono); color: var(--text-bright);" x-text="getAverageUptime(service.id)"></span>
+                        </div>
+                        <div class="uptime-strip">
+                          <template x-for="(day, idx) in getUptimeDays(service.id)" :key="idx">
+                            <div
+                              class="uptime-cell"
+                              :class="getUptimeCellClass(service.id, day)"
+                              :title="getUptimeTooltip(service.id, day)"
+                            ></div>
+                          </template>
+                        </div>
+                      </div>
+
+                      <!-- Probe Error Snippet (if any) -->
+                      <div x-show="lastCheckErrors[service.id]" class="error-snippet" role="alert">
+                        <span x-text="lastCheckErrors[service.id]"></span>
+                      </div>
+
+                      <!-- Card Actions -->
+                      <div class="card-actions" @click.stop>
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          @click="checkSingleService(service)"
+                          :disabled="!!checkingServiceIds[service.id]"
+                          aria-label="Probe service status"
+                        >
+                          <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true"></span>
+                          <svg class="icon" aria-hidden="true" x-show="!checkingServiceIds[service.id]"><use href="#icon-bolt"></use></svg>
+                          <span x-text="checkingServiceIds[service.id] ? 'Checking...' : 'Check'"></span>
+                        </button>
+
+                        <div style="display: flex; gap: var(--space-2);">
+                          <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            @click="openServicePanel(service, 'runbooks')"
+                            title="View service runbooks"
+                            aria-label="View runbooks"
+                          >
+                            <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg> Runbooks
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm"
+                            @click="openEditServiceModal(service)"
+                            title="Edit service configuration"
+                            aria-label="Edit service"
+                          >
+                            <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm"
+                            @click="confirmDeleteService(service)"
+                            title="Delete service"
+                            aria-label="Delete service"
+                          >
+                            <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  </template>
+                </div>
+              </section>
+            </template>
+          </main>
+        </div>
+      </template>
+
+      <!-- 2. Global Incidents Dashboard View -->
+      <template x-if="currentView === 'incidents'">
+        <main class="main-content">
+          <div class="toolbar-row" style="margin-bottom: var(--space-4);">
+            <div>
+              <h1 style="font-size: 1.25rem;">Incident History</h1>
+              <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                System outage tracking, durations, and resolution logs.
+              </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-4);">
+              <label class="form-checkbox-label">
+                <input type="checkbox" x-model="incidentsOnlyOpen">
+                <span>Show open incidents only</span>
+              </label>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                @click="loadIncidents()"
+                :disabled="loadingIncidents"
+              >
+                <span x-show="loadingIncidents" class="spinner" aria-hidden="true"></span>
+                <svg class="icon" aria-hidden="true" x-show="!loadingIncidents"><use href="#icon-refresh"></use></svg>
+                <span x-text="loadingIncidents ? 'Refreshing...' : 'Refresh'"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Incidents Loading Skeletons -->
+          <div x-show="loadingIncidents && incidents.length === 0" class="incidents-container">
+            <div class="skeleton-card" style="height: 100px;"></div>
+            <div class="skeleton-card" style="height: 100px;"></div>
+          </div>
+
+          <!-- Incidents Empty State -->
+          <div x-show="!loadingIncidents && incidents.length === 0" class="empty-state">
+            <div class="empty-icon" style="color: #34d399;"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-check"></use></svg></div>
+            <h2 style="font-size: 1.125rem;">No incidents reported</h2>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              <span x-text="incidentsOnlyOpen ? 'There are currently no unresolved service outages.' : 'No service outages have occurred.'"></span>
+            </p>
+          </div>
+
+          <!-- Incidents List -->
+          <div x-show="incidents.length > 0" class="incidents-container">
+            <template x-for="inc in incidents" :key="inc.id">
+              <div class="incident-item">
+                <div class="incident-header">
+                  <div style="display: flex; align-items: center; gap: var(--space-3);">
+                    <span
+                      class="status-badge"
+                      :class="inc.isOpen ? 'offline' : 'online'"
+                    >
+                      <span class="status-dot" :class="inc.isOpen ? 'offline' : 'online'"></span>
+                      <span x-text="inc.isOpen ? 'Active Incident' : 'Resolved'"></span>
+                    </span>
+                    <span class="incident-service" x-text="inc.serviceName"></span>
+                  </div>
+
+                  <div class="incident-meta">
+                    <span>Started: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.startedAt)"></strong></span>
+                    <span>Duration: <strong style="color: #38bdf8;" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
+                    <span x-show="!inc.isOpen && inc.resolvedAt">
+                      Resolved: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.resolvedAt)"></strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="incident-reason">
+                  <span>Reason: </span>
+                  <span x-text="inc.reason || 'Service probe failed with unexpected error.'"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </main>
+      </template>
+
+      <!-- 3. Service Detail Side Panel (Flyout Drawer) -->
+      <div
+        x-show="isPanelOpen"
+        class="panel-backdrop"
+        @click="closeServicePanel"
+        @keydown.escape.window="closeServicePanel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="side-panel-title"
+      >
+        <div class="side-panel" @click.stop>
+          <div class="panel-header">
+            <div style="display: flex; align-items: center; gap: var(--space-3); min-width: 0;">
+              <div class="service-icon-box">
+                <svg class="icon icon-lg" aria-hidden="true"><use :href="selectedService ? '#icon-' + window.Format.iconSymbol(selectedService.icon) : '#icon-server'"></use></svg>
+              </div>
+              <div style="min-width: 0;">
+                <h2 id="side-panel-title" style="font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="selectedService ? selectedService.name : 'Service Details'"></h2>
+                <div class="service-endpoint" x-text="selectedService ? window.Format.endpoint(selectedService) : ''"></div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <div
+                class="status-badge"
+                :class="selectedService ? window.Format.statusKey(selectedService.serviceStatus) : 'unknown'"
+              >
+                <span class="status-dot" :class="selectedService ? window.Format.statusKey(selectedService.serviceStatus) : 'unknown'"></span>
+                <span x-text="selectedService ? window.Format.statusLabel(selectedService.serviceStatus) : 'Unknown'"></span>
+              </div>
+
+              <button type="button" class="btn-icon btn-sm" @click="closeServicePanel" aria-label="Close side panel">
+                <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Panel Nav Tabs -->
+          <div style="padding: var(--space-3) var(--space-5) 0; border-bottom: 1px solid var(--glass-border);">
+            <nav class="nav-tabs" style="width: 100%; justify-content: flex-start;" aria-label="Service Panel Tabs">
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'overview' }"
+                @click="switchPanelTab('overview')"
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'uptime' }"
+                @click="switchPanelTab('uptime')"
+              >
+                Uptime (30d)
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'runbooks' }"
+                @click="switchPanelTab('runbooks')"
+              >
+                Runbooks (<span x-text="serviceRunbooks.length"></span>)
+              </button>
+              <button
+                type="button"
+                class="nav-tab-btn"
+                :class="{ 'active': panelTab === 'incidents' }"
+                @click="switchPanelTab('incidents')"
+              >
+                Incidents (<span x-text="serviceIncidents.length"></span>)
+              </button>
+            </nav>
+          </div>
+
+          <div class="panel-body">
+            <!-- Tab 1: Overview -->
+            <template x-if="panelTab === 'overview'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2);">Endpoint Configuration</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); font-size: 0.8125rem;">
+                    <div>
+                      <span style="color: var(--text-muted);">Protocol:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService && selectedService.useHttps ? 'HTTPS' : 'HTTP'"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Check Type:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? (selectedService.checkType === 2 ? 'TCP' : 'HTTP') : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Host & Port:</span>
+                      <strong style="color: var(--text-bright); display: block; font-family: var(--font-mono);" x-text="selectedService ? `${selectedService.host}:${selectedService.port}` : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Health Path:</span>
+                      <strong style="color: var(--text-bright); display: block; font-family: var(--font-mono);" x-text="selectedService && selectedService.healthPath ? selectedService.healthPath : '—'"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Timeout:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? `${selectedService.timeoutMs} ms` : ''"></strong>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted);">Category:</span>
+                      <strong style="color: var(--text-bright); display: block;" x-text="selectedService ? selectedService.categoryName : ''"></strong>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-1);">Description</h3>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);" x-text="selectedService && selectedService.description ? selectedService.description : 'No description provided.'"></p>
+                </div>
+
+                <!-- Live Status & Telemetry -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2);">Live Telemetry</h3>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <span style="color: var(--text-muted); font-size: 0.75rem;">Last Latency:</span>
+                      <div class="response-time" style="font-size: 1.125rem; font-family: var(--font-mono);" x-text="selectedService ? window.Format.responseTime(selectedService.lastResponceTimeMs) : '—'"></div>
+                    </div>
+                    <div>
+                      <span style="color: var(--text-muted); font-size: 0.75rem;">Last Probe:</span>
+                      <div style="font-size: 0.8125rem; color: var(--text-bright);" x-text="selectedService ? window.Format.dateTime(selectedService.lastCheckedAt) : 'Never'"></div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      @click="checkSingleService(selectedService)"
+                      :disabled="!!(selectedService && checkingServiceIds[selectedService.id])"
+                    >
+                      <span x-show="selectedService && checkingServiceIds[selectedService.id]" class="spinner" aria-hidden="true"></span>
+                      <svg class="icon" aria-hidden="true" x-show="!(selectedService && checkingServiceIds[selectedService.id])"><use href="#icon-bolt"></use></svg>
+                      <span x-text="(selectedService && checkingServiceIds[selectedService.id]) ? 'Checking...' : 'Probe Now'"></span>
+                    </button>
+                  </div>
+
+                  <div x-show="selectedService && lastCheckErrors[selectedService.id]" class="error-snippet" style="margin-top: var(--space-3);" role="alert">
+                    <span x-text="selectedService ? lastCheckErrors[selectedService.id] : ''"></span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); margin-top: auto;">
+                  <button type="button" class="btn btn-secondary" style="flex: 1;" @click="openEditServiceModal(selectedService)">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg> Edit Configuration
+                  </button>
+                  <button type="button" class="btn btn-danger" @click="confirmDeleteService(selectedService)">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> Delete Service
+                  </button>
+                </div>
+              </div>
+            </template>
+
+            <!-- Tab 2: Extended Uptime View -->
+            <template x-if="panelTab === 'uptime'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div class="runbook-card">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2);">
+                    <h3 style="font-size: 0.9375rem;">30-day Availability Strip</h3>
+                    <div class="telemetry-pill">
+                      <span>Average:</span>
+                      <strong style="color: #38bdf8;" x-text="selectedService ? getAverageUptime(selectedService.id) : ''"></strong>
+                    </div>
+                  </div>
+
+                  <!-- Large Uptime Strip -->
+                  <div class="uptime-strip-large">
+                    <template x-for="(day, idx) in (selectedService ? getUptimeDays(selectedService.id) : [])" :key="idx">
+                      <div
+                        class="uptime-cell"
+                        :class="getUptimeCellClass(selectedService.id, day)"
+                        :title="getUptimeTooltip(selectedService.id, day)"
+                      ></div>
+                    </template>
+                  </div>
+
+                  <!-- Legend -->
+                  <div class="uptime-legend" style="margin-top: var(--space-3);">
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-perfect" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>100% Online</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-degraded" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>&ge; 90% Degraded</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-down" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>&lt; 90% Down</span>
+                    </div>
+                    <div class="uptime-legend-item">
+                      <span class="uptime-cell status-nodata" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+                      <span>No checks</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Daily Telemetry Breakdown -->
+                <div class="runbook-card">
+                  <h3 style="font-size: 0.875rem; margin-bottom: var(--space-3);">Daily History Breakdown</h3>
+
+                  <div x-show="selectedService && isUptimeLoading(selectedService.id)" class="empty-state" style="padding: var(--space-4);">
+                    <span class="spinner" style="width: 20px; height: 20px;"></span>
+                    <span>Retrieving daily history...</span>
+                  </div>
+
+                  <div x-show="selectedService && !isUptimeLoading(selectedService.id)" class="uptime-day-grid">
+                    <template x-for="day in (selectedService ? getUptimeDays(selectedService.id) : [])" :key="day.date">
+                      <div class="uptime-day-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                          <span style="font-size: 0.6875rem; color: var(--text-dim);" x-text="day.date"></span>
+                          <span class="status-dot" :class="getUptimeCellClass(selectedService.id, day)" style="width: 6px; height: 6px;"></span>
+                        </div>
+                        <div style="font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 600; color: var(--text-bright);" x-text="day.totalChecks > 0 ? window.Format.percentage(day.uptimePercentage) : '—'"></div>
+                        <div style="font-size: 0.6875rem; color: var(--text-muted);" x-text="day.totalChecks > 0 ? `${day.onlineChecks}/${day.totalChecks} checks` : 'No checks'"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Tab 3: Runbooks -->
+            <template x-if="panelTab === 'runbooks'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.9375rem;">Operational Runbooks</h3>
+                  <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add Runbook
+                  </button>
+                </div>
+
+                <!-- Loading state -->
+                <div x-show="loadingRunbooks" class="empty-state" style="padding: var(--space-5);">
+                  <span class="spinner" style="width: 24px; height: 24px;"></span>
+                  <span>Loading service runbooks...</span>
+                </div>
+
+                <!-- Empty state -->
+                <div x-show="!loadingRunbooks && serviceRunbooks.length === 0" class="empty-state">
+                  <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-book"></use></svg></div>
+                  <h4 style="font-size: 0.9375rem;">No runbooks yet</h4>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                    Document disaster recovery commands, container restart snippets, or diagnostic steps.
+                  </p>
+                  <button type="button" class="btn btn-primary btn-sm" @click="openCreateRunbookModal">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Create first runbook
+                  </button>
+                </div>
+
+                <!-- Runbooks List -->
+                <template x-for="rb in serviceRunbooks" :key="rb.id">
+                  <div class="runbook-card">
+                    <div class="runbook-header">
+                      <div style="display: flex; align-items: center; gap: var(--space-2);">
+                        <span class="shell-badge" x-text="window.Format.shellTypeName(rb.shellType)"></span>
+                        <h4 class="runbook-title" x-text="rb.title"></h4>
+                      </div>
+
+                      <div style="display: flex; align-items: center; gap: var(--space-2);">
+                        <button
+                          type="button"
+                          class="btn-icon btn-sm"
+                          @click="openEditRunbookModal(rb)"
+                          title="Edit runbook"
+                          aria-label="Edit runbook"
+                        >
+                          <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-icon btn-sm"
+                          @click="deleteRunbook(rb)"
+                          :disabled="deletingRunbookId === rb.id"
+                          title="Delete runbook"
+                          aria-label="Delete runbook"
+                        >
+                          <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Command Snippet with Copy Feedback -->
+                    <div class="command-snippet">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm copy-btn"
+                        @click="copyCommand(rb)"
+                        aria-label="Copy command snippet"
+                      >
+                        <svg class="icon" aria-hidden="true" x-show="copiedRunbookId !== rb.id"><use href="#icon-copy"></use></svg>
+                        <svg class="icon" aria-hidden="true" x-show="copiedRunbookId === rb.id"><use href="#icon-check"></use></svg>
+                        <span x-text="copiedRunbookId === rb.id ? 'Copied!' : 'Copy'"></span>
+                      </button>
+                      <code x-text="rb.commandText"></code>
+                    </div>
+
+                    <!-- Notes -->
+                    <p x-show="rb.notes" style="font-size: 0.75rem; color: var(--text-muted); margin-top: var(--space-1);" x-text="rb.notes"></p>
+                  </div>
+                </template>
+              </div>
+            </template>
+
+            <!-- Tab 4: Service Incidents -->
+            <template x-if="panelTab === 'incidents'">
+              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <h3 style="font-size: 0.9375rem;">Service Outage Incidents</h3>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    @click="loadServiceIncidents(selectedService.id)"
+                    :disabled="loadingServiceIncidents"
+                  >
+                    <span x-show="loadingServiceIncidents" class="spinner" aria-hidden="true"></span>
+                    <svg class="icon" aria-hidden="true" x-show="!loadingServiceIncidents"><use href="#icon-refresh"></use></svg>
+                    <span>Refresh</span>
+                  </button>
+                </div>
+
+                <div x-show="loadingServiceIncidents" class="empty-state" style="padding: var(--space-5);">
+                  <span class="spinner" style="width: 24px; height: 24px;"></span>
+                  <span>Loading service incidents...</span>
+                </div>
+
+                <div x-show="!loadingServiceIncidents && serviceIncidents.length === 0" class="empty-state">
+                  <div class="empty-icon" style="color: #34d399;"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-check"></use></svg></div>
+                  <h4 style="font-size: 0.9375rem;">Clean track record</h4>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted);">
+                    No outages or incident logs recorded for this endpoint.
+                  </p>
+                </div>
+
+                <template x-for="inc in serviceIncidents" :key="inc.id">
+                  <div class="incident-item">
+                    <div class="incident-header">
+                      <span class="status-badge" :class="inc.isOpen ? 'offline' : 'online'">
+                        <span class="status-dot" :class="inc.isOpen ? 'offline' : 'online'"></span>
+                        <span x-text="inc.isOpen ? 'Ongoing Outage' : 'Resolved'"></span>
+                      </span>
+
+                      <div class="incident-meta">
+                        <span>Duration: <strong style="color: #38bdf8;" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
+                      </div>
+                    </div>
+
+                    <div class="incident-reason">
+                      <span x-text="inc.reason"></span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                      <span>Started: <span x-text="window.Format.dateTime(inc.startedAt)"></span></span>
+                      <span x-show="!inc.isOpen && inc.resolvedAt">
+                        Resolved: <span x-text="window.Format.dateTime(inc.resolvedAt)"></span>
+                      </span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create / Edit Runbook Modal -->
+      <div
+        x-show="isRunbookModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeRunbookModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="runbook-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 480px;" @click.outside="closeRunbookModal">
+          <div class="modal-header">
+            <h2 id="runbook-modal-title" style="font-size: 1rem;" x-text="isRunbookEditMode ? 'Edit Runbook' : 'Add Runbook'"></h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeRunbookModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <form @submit.prevent="submitRunbookForm">
+            <div class="modal-body">
+              <div x-show="runbookFormErrors.general" class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+                <span x-text="runbookFormErrors.general"></span>
+              </div>
+
+              <!-- Title -->
+              <div class="form-group">
+                <label for="rb-title" class="form-label">Runbook title *</label>
+                <input
+                  id="rb-title"
+                  type="text"
+                  class="form-input"
+                  x-model="runbookForm.title"
+                  placeholder="e.g. Restart Docker Container"
+                  maxlength="150"
+                  required
+                >
+                <span x-show="runbookFormErrors.title" class="form-error" x-text="runbookFormErrors.title"></span>
+              </div>
+
+              <!-- Shell Type -->
+              <div class="form-group">
+                <label for="rb-shell" class="form-label">Shell / Environment</label>
+                <select id="rb-shell" class="form-select" x-model="runbookForm.shellType">
+                  <option value="Bash">Bash</option>
+                  <option value="PowerShell">PowerShell</option>
+                  <option value="Docker">Docker</option>
+                </select>
+              </div>
+
+              <!-- Command Text -->
+              <div class="form-group">
+                <label for="rb-cmd" class="form-label">Command text *</label>
+                <textarea
+                  id="rb-cmd"
+                  class="form-textarea"
+                  style="font-family: var(--font-mono); font-size: 0.8125rem;"
+                  x-model="runbookForm.commandText"
+                  placeholder="docker restart service_name or systemctl restart ..."
+                  maxlength="500"
+                  required
+                ></textarea>
+                <span x-show="runbookFormErrors.commandText" class="form-error" x-text="runbookFormErrors.commandText"></span>
+              </div>
+
+              <!-- Notes -->
+              <div class="form-group">
+                <label for="rb-notes" class="form-label">Notes (optional)</label>
+                <textarea
+                  id="rb-notes"
+                  class="form-textarea"
+                  x-model="runbookForm.notes"
+                  placeholder="Additional operator instructions or safety flags..."
+                  maxlength="500"
+                ></textarea>
+                <span x-show="runbookFormErrors.notes" class="form-error" x-text="runbookFormErrors.notes"></span>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeRunbookModal">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="savingRunbook">
+                <span x-show="savingRunbook" class="spinner" aria-hidden="true"></span>
+                <span x-text="savingRunbook ? 'Saving...' : (isRunbookEditMode ? 'Update Runbook' : 'Add Runbook')"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Create / Edit Service Modal -->
+      <div
+        x-show="isServiceModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeServiceModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-modal-title"
+      >
+        <div class="modal-dialog" @click.outside="closeServiceModal">
+          <div class="modal-header">
+            <h2 id="service-modal-title" style="font-size: 1rem;" x-text="isEditMode ? 'Edit Monitored Service' : 'Add New Monitored Service'"></h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeServiceModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <form @submit.prevent="submitServiceForm">
+            <div class="modal-body">
+              <!-- General Error Message -->
+              <div x-show="serviceFormErrors.general" class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+                <span x-text="serviceFormErrors.general"></span>
+              </div>
+
+              <!-- Name -->
+              <div class="form-group">
+                <label for="srv-name" class="form-label">Service name *</label>
+                <input
+                  id="srv-name"
+                  type="text"
+                  class="form-input"
+                  x-model="serviceForm.name"
+                  placeholder="e.g. Nextcloud Server"
+                  maxlength="100"
+                  required
+                >
+                <span x-show="serviceFormErrors.name" class="form-error" x-text="serviceFormErrors.name"></span>
+              </div>
+
+              <!-- Host & Port Row -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-host" class="form-label">Host / IP *</label>
+                  <input
+                    id="srv-host"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.host"
+                    placeholder="192.168.1.100 or domain"
+                    maxlength="255"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.host" class="form-error" x-text="serviceFormErrors.host"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-port" class="form-label">Port * (1-65535)</label>
+                  <input
+                    id="srv-port"
+                    type="number"
+                    class="form-input"
+                    x-model="serviceForm.port"
+                    min="1"
+                    max="65535"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.port" class="form-error" x-text="serviceFormErrors.port"></span>
+                </div>
+              </div>
+
+              <!-- Check Type & Protocol -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-checktype" class="form-label">Check type</label>
+                  <select id="srv-checktype" class="form-select" x-model="serviceForm.checkType">
+                    <option value="Http">HTTP</option>
+                    <option value="Tcp">TCP</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end; padding-bottom: 0.5rem;">
+                  <label class="form-checkbox-label">
+                    <input type="checkbox" x-model="serviceForm.useHttps">
+                    <span>Use HTTPS (SSL/TLS)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Health Path & Timeout -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-healthpath" class="form-label">Health path (for HTTP)</label>
+                  <input
+                    id="srv-healthpath"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.healthPath"
+                    placeholder="/health or /"
+                    maxlength="255"
+                  >
+                  <span x-show="serviceFormErrors.healthPath" class="form-error" x-text="serviceFormErrors.healthPath"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-timeout" class="form-label">Timeout (500 - 30000 ms)</label>
+                  <input
+                    id="srv-timeout"
+                    type="number"
+                    class="form-input"
+                    x-model="serviceForm.timeoutMs"
+                    min="500"
+                    max="30000"
+                    step="100"
+                    required
+                  >
+                  <span x-show="serviceFormErrors.timeoutMs" class="form-error" x-text="serviceFormErrors.timeoutMs"></span>
+                </div>
+              </div>
+
+              <!-- Category & Icon -->
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="srv-category" class="form-label">Category *</label>
+                  <select id="srv-category" class="form-select" x-model="serviceForm.categoryId" required>
+                    <option value="">Select category...</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                      <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                  </select>
+                  <span x-show="serviceFormErrors.categoryId" class="form-error" x-text="serviceFormErrors.categoryId"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="srv-icon" class="form-label">Icon / Symbol (max 50 chars)</label>
+                  <input
+                    id="srv-icon"
+                    type="text"
+                    class="form-input"
+                    x-model="serviceForm.icon"
+                    placeholder="e.g. server, database, docker, web"
+                    maxlength="50"
+                  >
+                  <span x-show="serviceFormErrors.icon" class="form-error" x-text="serviceFormErrors.icon"></span>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="form-group">
+                <label for="srv-desc" class="form-label">Description (optional)</label>
+                <textarea
+                  id="srv-desc"
+                  class="form-textarea"
+                  x-model="serviceForm.description"
+                  placeholder="Notes about service purpose, subnet, container ID..."
+                  maxlength="500"
+                ></textarea>
+                <span x-show="serviceFormErrors.description" class="form-error" x-text="serviceFormErrors.description"></span>
+              </div>
+
+              <!-- Monitoring enabled checkbox -->
+              <label class="form-checkbox-label">
+                <input type="checkbox" x-model="serviceForm.isMonitoringEnabled">
+                <span>Enable periodic background health monitoring</span>
+              </label>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeServiceModal">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" :disabled="savingService">
+                <span x-show="savingService" class="spinner" aria-hidden="true"></span>
+                <span x-text="savingService ? 'Saving...' : (isEditMode ? 'Update Service' : 'Save Service')"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Service Confirmation Modal -->
+      <div
+        x-show="isDeleteModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeDeleteModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 440px;" @click.outside="closeDeleteModal">
+          <div class="modal-header">
+            <h2 id="delete-modal-title" style="font-size: 1rem; color: #fb7185;">Confirm Deletion</h2>
+            <button type="button" class="btn-icon btn-sm" @click="closeDeleteModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <p style="font-size: 0.875rem;">
+              Are you sure you want to delete <strong style="color: var(--text-bright);" x-text="serviceToDelete ? serviceToDelete.name : ''"></strong>?
+            </p>
+            <p style="font-size: 0.8125rem; color: var(--text-muted);">
+              All recorded health logs, incidents, and associated runbooks will be permanently removed.
+            </p>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeDeleteModal">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-danger" @click="executeDeleteService" :disabled="deletingService">
+              <span x-show="deletingService" class="spinner" aria-hidden="true"></span>
+              <span x-text="deletingService ? 'Deleting...' : 'Delete Service'"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Categories Modal -->
+      <div
+        x-show="isCategoryModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeCategoryModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="category-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 600px;" @click.outside="closeCategoryModal">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg class="icon" aria-hidden="true" style="color: var(--brand-accent);"><use href="#icon-tag"></use></svg>
+              <h2 id="category-modal-title" style="font-size: 1.125rem;">Manage Categories</h2>
+            </div>
+            <button type="button" class="btn-icon btn-sm" @click="closeCategoryModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Add / Edit Category Form -->
+            <form @submit.prevent="saveCategory" class="category-edit-box">
+              <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2); color: var(--text-bright);" x-text="isCategoryEditMode ? 'Edit Category' : 'Create New Category'"></h3>
+              
+              <div class="form-row-2">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="cat-name" class="form-label">Category Name *</label>
+                  <input
+                    id="cat-name"
+                    type="text"
+                    class="form-input"
+                    x-model="categoryForm.name"
+                    placeholder="e.g. Databases, Media, Gateways"
+                    maxlength="50"
+                    required
+                  >
+                  <span x-show="categoryFormErrors.name" class="form-error" x-text="categoryFormErrors.name"></span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="cat-color" class="form-label">Color Hex (#RRGGBB) *</label>
+                  <div style="display: flex; gap: var(--space-2); align-items: center;">
+                    <input
+                      id="cat-color"
+                      type="text"
+                      class="form-input"
+                      x-model="categoryForm.color"
+                      placeholder="#38bdf8"
+                      maxlength="7"
+                      pattern="^#([0-9a-fA-F]{6})$"
+                      required
+                    >
+                    <input
+                      type="color"
+                      aria-label="Pick color"
+                      x-model="categoryForm.color"
+                      class="color-picker-input"
+                    >
+                  </div>
+                  <span x-show="categoryFormErrors.color" class="form-error" x-text="categoryFormErrors.color"></span>
+                </div>
+              </div>
+
+              <!-- Color Presets -->
+              <div style="margin-top: var(--space-2);">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: var(--space-1);">Preset Palette:</span>
+                <div class="color-presets-row">
+                  <template x-for="preset in categoryColorPresets" :key="preset">
+                    <button
+                      type="button"
+                      class="color-preset-dot"
+                      :style="'background-color: ' + preset"
+                      :class="{ 'active': categoryForm.color.toLowerCase() === preset.toLowerCase() }"
+                      @click="selectCategoryColor(preset)"
+                      :aria-label="'Select color ' + preset"
+                    ></button>
+                  </template>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-3);">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  x-show="isCategoryEditMode"
+                  @click="cancelCategoryEdit"
+                >
+                  Cancel Edit
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm" :disabled="savingCategory">
+                  <span x-show="savingCategory" class="spinner" aria-hidden="true"></span>
+                  <span x-text="savingCategory ? 'Saving...' : (isCategoryEditMode ? 'Update Category' : 'Add Category')"></span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Existing Categories List -->
+            <div style="margin-top: var(--space-4);">
+              <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2); color: var(--text-muted);">Existing Categories</h3>
+              
+              <div class="categories-list">
+                <template x-if="categories.length === 0">
+                  <p style="font-size: 0.8125rem; color: var(--text-muted); text-align: center; padding: var(--space-3);">No categories found.</p>
+                </template>
+
+                <template x-for="cat in categories" :key="cat.id">
+                  <div class="category-list-item">
+                    <div style="display: flex; align-items: center; gap: var(--space-2); min-width: 0;">
+                      <span class="category-color-badge" :style="'background-color: ' + cat.color"></span>
+                      <strong class="category-name-text" x-text="cat.name"></strong>
+                      <span class="category-color-hex" x-text="cat.color"></span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: var(--space-1);">
+                      <button
+                        type="button"
+                        class="btn-icon btn-sm"
+                        @click="editCategory(cat)"
+                        aria-label="Edit category"
+                        title="Edit"
+                      >
+                        <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-icon btn-sm btn-icon-danger"
+                        @click="deleteCategory(cat)"
+                        :disabled="deletingCategoryId === cat.id"
+                        aria-label="Delete category"
+                        title="Delete"
+                      >
+                        <span x-show="deletingCategoryId === cat.id" class="spinner" aria-hidden="true"></span>
+                        <svg class="icon" aria-hidden="true" x-show="deletingCategoryId !== cat.id"><use href="#icon-trash"></use></svg>
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeCategoryModal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup & Restore Modal -->
+      <div
+        x-show="isBackupModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeBackupModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="backup-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 540px;" @click.outside="closeBackupModal">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg class="icon" aria-hidden="true" style="color: var(--brand-accent);"><use href="#icon-download"></use></svg>
+              <h2 id="backup-modal-title" style="font-size: 1.125rem;">JSON Backup & Restore</h2>
+            </div>
+            <button type="button" class="btn-icon btn-sm" @click="closeBackupModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Export Section -->
+            <div class="backup-section-card">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);">
+                <div>
+                  <h3 style="font-size: 0.9375rem; margin-bottom: var(--space-1); color: var(--text-bright);">Export Configuration</h3>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">
+                    Download all categories, monitored services, and runbooks as a portable JSON snapshot.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="white-space: nowrap; flex-shrink: 0;"
+                  @click="downloadBackup"
+                  :disabled="exportingBackup"
+                >
+                  <span x-show="exportingBackup" class="spinner" aria-hidden="true"></span>
+                  <svg class="icon" aria-hidden="true" x-show="!exportingBackup"><use href="#icon-download"></use></svg>
+                  <span x-text="exportingBackup ? 'Exporting...' : 'Export JSON'"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Import Section -->
+            <div class="backup-section-card" style="margin-top: var(--space-3);">
+              <h3 style="font-size: 0.9375rem; margin-bottom: var(--space-1); color: var(--text-bright);">Import & Merge Configuration</h3>
+              <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: var(--space-3);">
+                Upload a JSON backup file. Existing services and categories are safely merged without overwriting your IDs.
+              </p>
+
+              <div class="file-picker-box">
+                <input
+                  id="backup-file-input"
+                  type="file"
+                  accept=".json,application/json"
+                  style="display: none;"
+                  @change="handleBackupFileSelect"
+                >
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick="document.getElementById('backup-file-input').click()"
+                  >
+                    <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> Choose File...
+                  </button>
+                  <span
+                    style="font-size: 0.8125rem; color: var(--text-muted); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;"
+                    x-text="importFileName ? importFileName : 'No file chosen'"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Error message -->
+              <div x-show="backupError" x-transition class="form-error" style="margin-top: var(--space-2);" x-text="backupError"></div>
+
+              <!-- Import Action Button -->
+              <div style="margin-top: var(--space-3); display: flex; justify-content: flex-end;">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  @click="executeImportBackup"
+                  :disabled="!importFile || importingBackup"
+                >
+                  <span x-show="importingBackup" class="spinner" aria-hidden="true"></span>
+                  <svg class="icon" aria-hidden="true" x-show="!importingBackup"><use href="#icon-upload"></use></svg>
+                  <span x-text="importingBackup ? 'Merging data...' : 'Import & Restore'"></span>
+                </button>
+              </div>
+
+              <!-- Import Result Statistics -->
+              <template x-if="importResult">
+                <div class="import-result-stats" x-transition>
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+                    <svg class="icon" aria-hidden="true" style="color: var(--status-online);"><use href="#icon-check"></use></svg>
+                    <strong style="font-size: 0.875rem; color: var(--text-bright);">Import Completed</strong>
+                  </div>
+                  <div class="result-grid">
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.categoriesAdded"></span>
+                      <span class="stat-label">Categories Added</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.categoriesSkipped"></span>
+                      <span class="stat-label">Categories Skipped</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.servicesAdded"></span>
+                      <span class="stat-label">Services Added</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.servicesSkipped"></span>
+                      <span class="stat-label">Services Skipped</span>
+                    </div>
+                    <div class="result-stat-item" style="grid-column: span 2;">
+                      <span class="stat-num" x-text="importResult.runbooksAdded"></span>
+                      <span class="stat-label">Runbooks Added</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeBackupModal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+</body>
+</html>
