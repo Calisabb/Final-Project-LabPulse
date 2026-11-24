@@ -8,18 +8,21 @@
   <title>LabPulse · Homelab Operations</title>
 
   <!-- Local Vendored Stylesheets -->
-  <link rel="stylesheet" href="css/tokens.css?v=2">
-  <link rel="stylesheet" href="css/base.css?v=2">
-  <link rel="stylesheet" href="css/components.css?v=2">
+  <link rel="stylesheet" href="css/tokens.css?v=8">
+  <link rel="stylesheet" href="css/base.css?v=8">
+  <link rel="stylesheet" href="css/components.css?v=8">
 
   <!-- Local Vendored Application Scripts -->
   <script src="vendor/alpine.min.js" defer></script>
-  <script src="js/format.js?v=2"></script>
-  <script src="js/auth.js?v=2"></script>
-  <script src="js/api.js?v=2"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="js/format.js?v=8"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/api.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </head>
 <body x-data="app" class="app-reveal" x-cloak>
+
+  <!-- Authentic CRT Scanlines Texture Overlay -->
+  <div class="edex-scanlines" aria-hidden="true"></div>
 
   <!-- SVG Icon Sprite (inline, display:none) -->
   <svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
@@ -65,38 +68,40 @@
     </template>
   </div>
 
-  <!-- Unauthenticated: Frosted Glass Login Screen -->
+  <!-- Unauthenticated: Terminal Login Screen -->
   <template x-if="!isAuthenticated">
-    <main class="modal-backdrop" style="position: fixed; inset: 0; background: transparent; z-index: var(--z-sticky);">
-      <div class="modal-dialog" style="max-width: 400px; margin: auto;">
-        <div class="modal-header">
-          <div class="brand-section">
-            <span class="brand-pulse"></span>
-            <span class="brand-logo">LabPulse</span>
+    <main class="modal-backdrop" style="position: fixed; inset: 0; background: var(--term-bg); z-index: var(--z-sticky);">
+      <div class="modal-dialog" style="max-width: 420px; margin: auto; border: 1px solid var(--term-border-bright);">
+        <div class="modal-header" style="background: var(--term-header); border-bottom: 1px solid var(--term-border);">
+          <div style="display: flex; align-items: center; gap: var(--space-2);">
+            <span class="status-dot-pulse"></span>
+            <span class="brand-title" style="font-size: 0.95rem;">SECURE_ACCESS // LOGIN</span>
           </div>
-          <span class="telemetry-pill">v1.0 · Ops</span>
+          <span style="font-size: 0.7rem; color: var(--term-cyan); font-family: var(--font-mono);">[PORT: 5046]</span>
         </div>
 
-        <form @submit.prevent="handleLogin" class="modal-body">
-          <div style="margin-bottom: var(--space-2);">
-            <h1 style="font-size: 1.125rem; margin-bottom: var(--space-1);">Operator sign in</h1>
-            <p style="font-size: 0.8125rem; color: var(--text-muted);">
-              Enter credentials to access the homelab monitoring control room.
+        <form @submit.prevent="handleLogin" class="modal-body" style="background: var(--term-surface);">
+          <div style="margin-bottom: var(--space-3); border-bottom: 1px solid var(--term-border-subtle); padding-bottom: var(--space-2);">
+            <div style="font-size: 0.75rem; color: var(--term-cyan); font-family: var(--font-mono); letter-spacing: 0.04em;">
+              IDENTITY_AUTHENTICATION_GATEWAY
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+              Enter operator credentials to establish encrypted session.
             </p>
           </div>
 
           <!-- Session Expiry or Notice Alert -->
-          <div x-show="loginMessage" x-transition class="form-error" style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); color: #67e8f9; padding: var(--space-3); border-radius: var(--radius-sm);" role="status">
+          <div x-show="loginMessage" x-transition class="form-error" style="background: rgba(0, 242, 255, 0.08); border: 1px solid var(--term-cyan); color: var(--term-cyan); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); margin-bottom: var(--space-3);" role="status">
             <span x-text="loginMessage"></span>
           </div>
 
           <!-- Login Error Alert -->
-          <div x-show="loginError" x-transition class="form-error" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; padding: var(--space-3); border-radius: var(--radius-sm);" role="alert">
+          <div x-show="loginError" x-transition class="form-error" style="background: var(--term-red-dim); border: 1px solid var(--term-red); color: var(--term-red); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); margin-bottom: var(--space-3);" role="alert">
             <span x-text="loginError"></span>
           </div>
 
           <div class="form-group">
-            <label for="login-username" class="form-label">Username</label>
+            <label for="login-username" class="form-label">&gt; IDENTITY / USERNAME</label>
             <input
               id="login-username"
               type="text"
@@ -110,7 +115,7 @@
           </div>
 
           <div class="form-group">
-            <label for="login-password" class="form-label">Password</label>
+            <label for="login-password" class="form-label"># KEY / PASSWORD</label>
             <input
               id="login-password"
               type="password"
@@ -122,9 +127,9 @@
             >
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--space-2);" :disabled="loginLoading">
-            <span x-show="loginLoading" class="spinner" aria-hidden="true"></span>
-            <span x-text="loginLoading ? 'Authenticating...' : 'Sign in to console'"></span>
+          <button type="submit" class="btn-terminal btn-terminal-primary" style="width: 100%; margin-top: var(--space-3); padding: 0.65rem;" :disabled="loginLoading">
+            <span x-show="loginLoading" class="spinner-terminal" aria-hidden="true"></span>
+            <span x-text="loginLoading ? 'AUTHENTICATING...' : 'AUTHENTICATE &gt;&gt;'"></span>
           </button>
         </form>
       </div>
@@ -133,312 +138,325 @@
 
   <!-- Authenticated Application Shell -->
   <template x-if="isAuthenticated">
-    <div>
-      <!-- Header -->
-      <header class="app-header">
-        <div class="header-container">
-          <div class="brand-section">
-            <span class="brand-pulse"></span>
-            <span class="brand-logo">LabPulse</span>
+    <div class="edex-shell">
+      <!-- Top Master Bezel Bar -->
+      <header class="edex-topbar">
+        <div class="edex-brand">
+          <span class="edex-pulse-led"></span>
+          <span style="font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em;">LabPulse</span>
+        </div>
 
-            <nav class="nav-tabs" aria-label="Main Navigation">
-              <button
-                type="button"
-                class="nav-tab-btn"
-                :class="{ 'active': currentView === 'services' }"
-                @click="currentView = 'services'"
-              >
-                Services
-              </button>
-              <button
-                type="button"
-                class="nav-tab-btn"
-                :class="{ 'active': currentView === 'incidents' }"
-                @click="currentView = 'incidents'"
-              >
-                Incidents
-              </button>
-            </nav>
-          </div>
+        <!-- Terminal View Tabs -->
+        <nav class="edex-topbar-tabs" aria-label="Terminal Views">
+          <button
+            type="button"
+            class="edex-tab-btn"
+            :class="{ 'active': currentView === 'services' }"
+            @click="currentView = 'services'"
+          >
+            <svg class="icon"><use href="#icon-server"></use></svg>
+            <span>[01 // MONITORED_NODES]</span>
+          </button>
+          <button
+            type="button"
+            class="edex-tab-btn"
+            :class="{ 'active': currentView === 'incidents' }"
+            @click="currentView = 'incidents'"
+          >
+            <svg class="icon"><use href="#icon-broadcast"></use></svg>
+            <span>[02 // ACTIVE_INCIDENTS]</span>
+            <span
+              x-show="incidents.filter(i => !i.resolvedAt).length > 0"
+              class="tab-badge"
+              x-text="incidents.filter(i => !i.resolvedAt).length"
+            ></span>
+          </button>
+        </nav>
 
-          <div class="header-actions">
-            <!-- Check All Button -->
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="checkAllServices"
-              :disabled="isCheckingAll || loadingServices"
-              aria-label="Probe all monitored services"
-            >
-              <span x-show="isCheckingAll" class="spinner" aria-hidden="true"></span>
-              <svg class="icon" aria-hidden="true" x-show="!isCheckingAll"><use href="#icon-bolt"></use></svg>
-              <span x-text="isCheckingAll ? 'Checking all...' : 'Check all'"></span>
-            </button>
-
-            <!-- Manage Categories Button -->
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="openCategoryModal"
-              aria-label="Manage categories"
-            >
-              <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
-              <span>Categories</span>
-            </button>
-
-            <!-- JSON Backup Button -->
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="openBackupModal"
-              aria-label="Backup and restore"
-            >
-              <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
-              <span>Backup</span>
-            </button>
-
-            <!-- Add Service Button -->
-            <button type="button" class="btn btn-primary btn-sm" @click="openCreateServiceModal" aria-label="Add monitored service">
-              <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add Service
-            </button>
-
-            <div class="telemetry-pill">
-              <span>Operator:</span>
-              <strong style="color: var(--text-bright);" x-text="userName"></strong>
-            </div>
-
-            <button type="button" class="btn btn-secondary btn-sm" @click="handleLogout" aria-label="Sign out">
-              <svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg> Sign out
-            </button>
-          </div>
+        <!-- Right System Meta & Logout -->
+        <div class="edex-topbar-meta">
+          <span>OPERATOR: <strong x-text="userName"></strong></span>
+          <span>SESSION: <strong x-text="sessionUptimeFormatted"></strong></span>
+          <button
+            type="button"
+            class="btn-icon btn-sm"
+            @click="handleLogout"
+            title="Terminate operator session"
+            aria-label="Logout"
+          >
+            <svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg>
+          </button>
         </div>
       </header>
 
-      <!-- 1. Services View -->
-      <template x-if="currentView === 'services'">
-        <div>
-          <!-- Filter Toolbar -->
-          <section class="toolbar-section" aria-label="Filters and search">
-            <div class="toolbar-row">
-              <!-- Search box -->
-              <div class="search-box">
-                <span class="search-icon" aria-hidden="true"><svg class="icon" aria-hidden="true"><use href="#icon-search"></use></svg></span>
-                <input
-                  type="text"
-                  class="search-input"
-                  x-model="searchQuery"
-                  placeholder="Search service name or host..."
-                  aria-label="Search services"
-                >
-                <button
-                  type="button"
-                  x-show="searchQuery"
-                  class="search-clear"
-                  @click="searchQuery = ''"
-                  aria-label="Clear search query"
-                >
-                  <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
-                </button>
-              </div>
+      <!-- 4-Zone eDEX Grid -->
+      <main class="edex-grid">
+        <!-- ================= ZONE 1: LEFT PANEL (TELEMETRY & CLUSTERS) ================= -->
+        <aside class="edex-panel edex-left-col" aria-label="System Telemetry">
+          <div class="edex-panel-header">
+            <span>[01 // TELEMETRY]</span>
+            <span style="color: var(--edex-text-muted); font-size: 0.62rem;">PORT: 5046</span>
+          </div>
 
-              <!-- Status filter segmented buttons -->
-              <div class="status-filters" role="group" aria-label="Status Filter">
-                <button
-                  type="button"
-                  class="status-filter-btn"
-                  :class="{ 'active': selectedStatus === 'all' }"
-                  @click="selectedStatus = 'all'"
-                >
-                  All
-                </button>
-                <button
-                  type="button"
-                  class="status-filter-btn"
-                  :class="{ 'active': selectedStatus === 'online' }"
-                  @click="selectedStatus = 'online'"
-                >
-                  Online
-                </button>
-                <button
-                  type="button"
-                  class="status-filter-btn"
-                  :class="{ 'active': selectedStatus === 'offline' }"
-                  @click="selectedStatus = 'offline'"
-                >
-                  Offline
-                </button>
+          <div class="edex-panel-body">
+            <!-- Digital Clock Widget -->
+            <div class="edex-clock-card">
+              <div class="edex-clock-digits" x-text="currentTimeStr">20:28:46</div>
+              <div class="edex-clock-sub">
+                <span x-text="currentDateStr">24 NOV 2026</span>
+                <span>SWEEP: <strong style="color: var(--edex-cyan);" x-text="sweepCountdownSec + 's'"></strong></span>
               </div>
             </div>
 
-            <!-- Category filter chips -->
-            <div class="category-chips" role="group" aria-label="Category Filter">
-              <button
-                type="button"
-                class="category-chip"
-                :class="{ 'active': selectedCategory === null }"
-                @click="selectedCategory = null"
-              >
-                All categories
-              </button>
+            <!-- Health Gauge Card -->
+            <div class="edex-health-card">
+              <div class="edex-health-header">
+                <span class="edex-health-pct" :style="{ color: offlineServicesCount === 0 ? 'var(--edex-green)' : 'var(--edex-red)' }" x-text="healthPercent + '%'"></span>
+                <span class="edex-health-status" :style="{ color: offlineServicesCount === 0 ? 'var(--edex-green)' : 'var(--edex-red)' }" x-text="offlineServicesCount === 0 ? 'ALL SYSTEMS OPERATIONAL' : 'SYSTEM DEGRADED'"></span>
+              </div>
+              <div class="edex-meter-track">
+                <div class="edex-meter-fill" :style="{ width: healthPercent + '%', background: offlineServicesCount === 0 ? 'var(--edex-green)' : 'var(--edex-red)' }"></div>
+              </div>
 
-              <template x-for="cat in categories" :key="cat.id">
+              <!-- Quick Metrics Grid -->
+              <div class="edex-stats-row">
+                <div class="edex-stat-box">
+                  <span class="edex-stat-label">Online Nodes</span>
+                  <span class="edex-stat-val" style="color: var(--edex-green);" x-text="onlineServicesCount + '/' + services.length"></span>
+                </div>
+                <div class="edex-stat-box">
+                  <span class="edex-stat-label">Avg Latency</span>
+                  <span class="edex-stat-val" style="color: var(--edex-cyan);" x-text="averageLatencyMs ? averageLatencyMs + 'ms' : '--'"></span>
+                </div>
+                <div class="edex-stat-box">
+                  <span class="edex-stat-label">Incidents</span>
+                  <span class="edex-stat-val" :style="{ color: offlineServicesCount > 0 ? 'var(--edex-red)' : 'var(--edex-text-muted)' }" x-text="offlineServicesCount"></span>
+                </div>
+                <div class="edex-stat-box">
+                  <span class="edex-stat-label">Clusters</span>
+                  <span class="edex-stat-val" style="color: var(--edex-cyan);" x-text="categories.length"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category Cluster Filters -->
+            <div style="margin-top: 6px;">
+              <div class="edex-dock-label" style="margin-bottom: 6px; font-size: 0.65rem;">// CLUSTERS</div>
+              <div class="edex-cluster-list">
                 <button
                   type="button"
-                  class="category-chip"
-                  :class="{ 'active': selectedCategory === cat.id }"
-                  @click="selectedCategory = (selectedCategory === cat.id ? null : cat.id)"
+                  class="edex-cluster-btn"
+                  :class="{ 'active': selectedCategory === null }"
+                  @click="selectedCategory = null"
                 >
-                  <span class="chip-dot" :style="{ backgroundColor: cat.color || '#38bdf8' }"></span>
-                  <span x-text="cat.name"></span>
+                  <span>[ALL NODES]</span>
+                  <span class="edex-cluster-badge" x-text="services.length"></span>
                 </button>
-              </template>
-            </div>
-          </section>
 
-          <!-- Main Services Content -->
-          <main class="main-content">
-            <!-- Loading Skeletons -->
-            <div x-show="loadingServices && services.length === 0" class="service-grid">
-              <div class="skeleton-card"></div>
-              <div class="skeleton-card"></div>
-              <div class="skeleton-card"></div>
+                <template x-for="cat in categories" :key="cat.id">
+                  <button
+                    type="button"
+                    class="edex-cluster-btn"
+                    :class="{ 'active': selectedCategory === cat.id }"
+                    @click="selectedCategory = (selectedCategory === cat.id ? null : cat.id)"
+                  >
+                    <span style="display: flex; align-items: center; min-width: 0;">
+                      <span class="edex-cluster-dot" :style="{ background: cat.color || 'var(--edex-cyan)' }"></span>
+                      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" x-text="cat.name"></span>
+                    </span>
+                    <span class="edex-cluster-badge" x-text="services.filter(s => s.categoryId === cat.id).length"></span>
+                  </button>
+                </template>
+              </div>
             </div>
+          </div>
+        </aside>
 
-            <!-- Empty State: No services configured at all -->
-            <div x-show="!loadingServices && services.length === 0" class="empty-state">
-              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-broadcast"></use></svg></div>
-              <h2 style="font-size: 1.125rem;">No services monitored yet</h2>
-              <p style="font-size: 0.8125rem; color: var(--text-muted); max-width: 420px;">
-                Start monitoring your homelab servers, docker containers, and internal applications by adding your first service.
-              </p>
-              <button type="button" class="btn btn-primary" @click="openCreateServiceModal">
-                <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg> Add your first service
-              </button>
-            </div>
+        <!-- ================= ZONE 2: CENTER PANEL (MAIN SHELL & BLADE CARDS) ================= -->
+        <section class="edex-panel edex-center-col" aria-label="Operations Grid">
+          <div class="edex-panel-header">
+            <span x-text="currentView === 'services' ? '[02 // OPERATIONS_CORE]' : '[02 // INCIDENT_STREAM]'"></span>
+            <span style="color: var(--edex-cyan); font-size: 0.68rem;" x-text="currentView === 'services' ? (filteredServices.length + ' NODES READY') : (incidents.length + ' EVENTS LOGGED')"></span>
+          </div>
 
-            <!-- Empty State: Filter matched nothing -->
-            <div x-show="!loadingServices && services.length > 0 && filteredServices.length === 0" class="empty-state">
-              <div class="empty-icon"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-search"></use></svg></div>
-              <h2 style="font-size: 1.125rem;">No matching services found</h2>
-              <p style="font-size: 0.8125rem; color: var(--text-muted);">
-                No monitored endpoints match the active filters or search terms.
-              </p>
-              <button type="button" class="btn btn-secondary btn-sm" @click="resetFilters">
-                Reset filters
-              </button>
-            </div>
+          <div class="edex-panel-body">
+            <!-- 1. Services Operations View -->
+            <template x-if="currentView === 'services'">
+              <div style="display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0;">
+                <!-- Terminal Command & Search Filter Bar -->
+                <div class="edex-toolbar">
+                  <div class="edex-search-prompt">
+                    <span class="edex-prompt-symbol">&gt;_</span>
+                    <input
+                      type="text"
+                      class="edex-search-input"
+                      x-model="searchQuery"
+                      placeholder="filter node name, host or port..."
+                      aria-label="Filter nodes"
+                    >
+                    <button
+                      type="button"
+                      x-show="searchQuery"
+                      style="background: transparent; border: none; color: var(--edex-text-muted); cursor: pointer; padding: 2px;"
+                      @click="searchQuery = ''"
+                    >
+                      <svg class="icon"><use href="#icon-close"></use></svg>
+                    </button>
+                  </div>
 
-            <!-- Grouped Service Lists -->
-            <template x-for="group in groupedCategories" :key="group.category.id">
-              <section class="category-group">
-                <div class="category-group-header">
-                  <div class="category-title">
-                    <span class="chip-dot" :style="{ backgroundColor: group.category.color || '#38bdf8' }"></span>
-                    <span x-text="group.category.name"></span>
-                    <span class="category-count" x-text="group.services.length"></span>
+                  <!-- Status segment filters -->
+                  <div class="edex-filter-group">
+                    <button
+                      type="button"
+                      class="edex-filter-btn"
+                      :class="{ 'active': selectedStatus === 'all' }"
+                      @click="selectedStatus = 'all'"
+                    >
+                      ALL
+                    </button>
+                    <button
+                      type="button"
+                      class="edex-filter-btn"
+                      :class="{ 'active': selectedStatus === 'online' }"
+                      @click="selectedStatus = 'online'"
+                    >
+                      ONLINE
+                    </button>
+                    <button
+                      type="button"
+                      class="edex-filter-btn"
+                      :class="{ 'active': selectedStatus === 'offline' }"
+                      @click="selectedStatus = 'offline'"
+                    >
+                      OFFLINE
+                    </button>
                   </div>
                 </div>
 
-                <div class="service-grid">
-                  <template x-for="service in group.services" :key="service.id">
-                    <article class="service-card" @click="openServicePanel(service, 'overview')">
-                      <div class="card-top">
-                        <div class="service-identity">
-                          <div class="service-icon-box">
-                            <svg class="icon icon-lg" aria-hidden="true"><use :href="'#icon-' + window.Format.iconSymbol(service.icon)"></use></svg>
-                          </div>
-                          <div class="service-meta">
-                            <h3 class="service-name" x-text="service.name"></h3>
-                            <div class="service-endpoint" :title="window.Format.endpoint(service)">
-                              <span x-text="window.Format.endpoint(service)"></span>
-                            </div>
-                          </div>
+                <!-- Empty State -->
+                <div x-show="!loadingServices && filteredServices.length === 0" class="empty-state" style="margin: auto;">
+                  <div class="empty-icon"><svg class="icon icon-lg"><use href="#icon-terminal"></use></svg></div>
+                  <h3 style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--edex-cyan);">NO_NODES_FOUND</h3>
+                  <p style="font-size: 0.78rem; color: var(--edex-text-muted); margin: 6px 0 12px;">
+                    No services match current search criteria.
+                  </p>
+                  <button type="button" class="edex-key-btn primary" @click="resetFilters">
+                    RESET FILTERS
+                  </button>
+                </div>
+
+                <!-- Blade Service Cards Grid -->
+                <div x-show="filteredServices.length > 0" class="edex-cards-grid">
+                  <template x-for="service in filteredServices" :key="service.id">
+                    <article
+                      class="edex-blade-card"
+                      :class="'status-' + window.Format.statusKey(service.serviceStatus)"
+                    >
+                      <!-- Blade Head -->
+                      <div class="edex-blade-head">
+                        <div class="edex-blade-title-wrap">
+                          <svg class="edex-blade-icon" aria-hidden="true">
+                            <use :href="'#icon-' + window.Format.iconSymbol(service.icon)"></use>
+                          </svg>
+                          <span
+                            class="edex-blade-title"
+                            x-text="service.name"
+                            @click="openServicePanel(service)"
+                            :title="service.name"
+                          ></span>
                         </div>
 
-                        <!-- Status Badge -->
-                        <div class="status-badge" :class="window.Format.statusKey(service.serviceStatus)">
-                          <span class="status-dot" :class="window.Format.statusKey(service.serviceStatus)"></span>
-                          <span x-text="window.Format.statusLabel(service.serviceStatus)"></span>
+                        <!-- Category Pill -->
+                        <span
+                          style="font-family: var(--font-mono); font-size: 0.62rem; padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.15);"
+                          :style="{ color: service.categoryColor || 'var(--edex-cyan)', borderColor: service.categoryColor || 'var(--edex-border)' }"
+                          x-text="service.categoryName || 'GENERAL'"
+                        ></span>
+                      </div>
+
+                      <!-- Blade Meta & Status -->
+                      <div class="edex-blade-meta">
+                        <span class="edex-blade-host" x-text="service.host + ':' + service.port"></span>
+
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                          <!-- Status Pill -->
+                          <span
+                            class="edex-status-pill"
+                            :class="window.Format.statusKey(service.serviceStatus)"
+                          >
+                            <span x-text="service.serviceStatus === 'Online' ? '[RUN // 200]' : (service.serviceStatus === 'Offline' ? '[ERR // 503]' : '[IDLE]')"></span>
+                          </span>
+
+                          <!-- Latency -->
+                          <span
+                            style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--edex-cyan);"
+                            x-text="window.Format.responseTime(service.lastResponceTimeMs)"
+                          ></span>
                         </div>
                       </div>
 
-                      <!-- Description -->
-                      <p class="service-description" x-text="service.description || 'No description provided.'"></p>
-
-                      <!-- Telemetry Status Bar -->
-                      <div class="card-status-bar">
-                        <span class="telemetry-pill">
-                          <span>Latency:</span>
-                          <strong class="response-time" x-text="window.Format.responseTime(service.lastResponceTimeMs)"></strong>
-                        </span>
-
-                        <span class="telemetry-pill" :title="window.Format.dateTime(service.lastCheckedAt)">
-                          <span>Checked:</span>
-                          <span x-text="window.Format.relativeTime(service.lastCheckedAt)"></span>
-                        </span>
-                      </div>
-
-                      <!-- 30-day Uptime Strip -->
-                      <div class="uptime-strip-container" @click.stop="openServicePanel(service, 'uptime')">
-                        <div class="uptime-strip-label">
-                          <span>30-day uptime</span>
-                          <span style="font-family: var(--font-mono); color: var(--text-bright);" x-text="getAverageUptime(service.id)"></span>
+                      <!-- 30-Day Uptime Matrix Bar -->
+                      <div class="edex-matrix-wrap">
+                        <div class="edex-matrix-label">
+                          <span>30D UPTIME</span>
+                          <span
+                            x-text="uptimeCache[service.id]?.data ? Math.round(uptimeCache[service.id].data.overallUptimePercentage) + '%' : '--%'"
+                          ></span>
                         </div>
-                        <div class="uptime-strip">
-                          <template x-for="(day, idx) in getUptimeDays(service.id)" :key="idx">
+                        <div class="edex-matrix-bar">
+                          <template x-for="(day, idx) in (uptimeCache[service.id]?.data?.days || [])" :key="idx">
                             <div
-                              class="uptime-cell"
-                              :class="getUptimeCellClass(service.id, day)"
-                              :title="getUptimeTooltip(service.id, day)"
+                              class="edex-matrix-cell"
+                              :class="day.uptimePercentage >= 98 ? 'online' : (day.uptimePercentage > 0 ? 'offline' : (day.totalChecks > 0 ? 'offline' : 'empty'))"
+                              :title="`${day.date}: ${day.uptimePercentage.toFixed(1)}% (${day.successfulChecks}/${day.totalChecks})`"
                             ></div>
+                          </template>
+                          <!-- Skeleton filler if uptime not yet loaded -->
+                          <template x-if="!uptimeCache[service.id]?.data">
+                            <template x-for="n in 30" :key="n">
+                              <div class="edex-matrix-cell empty"></div>
+                            </template>
                           </template>
                         </div>
                       </div>
 
-                      <!-- Probe Error Snippet (if any) -->
-                      <div x-show="lastCheckErrors[service.id]" class="error-snippet" role="alert">
-                        <span x-text="lastCheckErrors[service.id]"></span>
-                      </div>
-
-                      <!-- Card Actions -->
-                      <div class="card-actions" @click.stop>
+                      <!-- Action Buttons -->
+                      <div class="edex-blade-actions">
                         <button
                           type="button"
-                          class="btn btn-secondary btn-sm"
+                          class="edex-action-btn"
                           @click="checkSingleService(service)"
                           :disabled="!!checkingServiceIds[service.id]"
-                          aria-label="Probe service status"
+                          title="Run probe check"
                         >
-                          <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true"></span>
+                          <span x-show="checkingServiceIds[service.id]" class="spinner" aria-hidden="true" style="width: 10px; height: 10px;"></span>
                           <svg class="icon" aria-hidden="true" x-show="!checkingServiceIds[service.id]"><use href="#icon-bolt"></use></svg>
-                          <span x-text="checkingServiceIds[service.id] ? 'Checking...' : 'Check'"></span>
+                          <span>PING</span>
                         </button>
 
-                        <div style="display: flex; gap: var(--space-2);">
+                        <div style="display: flex; gap: 4px;">
                           <button
                             type="button"
-                            class="btn btn-secondary btn-sm"
-                            @click="openServicePanel(service, 'runbooks')"
-                            title="View service runbooks"
-                            aria-label="View runbooks"
+                            class="edex-action-btn"
+                            @click="openServicePanel(service)"
+                            title="Inspect details, runbooks, incidents"
                           >
-                            <svg class="icon" aria-hidden="true"><use href="#icon-book"></use></svg> Runbooks
+                            <svg class="icon" aria-hidden="true"><use href="#icon-terminal"></use></svg>
+                            <span>INSPECT</span>
                           </button>
                           <button
                             type="button"
-                            class="btn-icon btn-sm"
+                            class="edex-action-btn"
                             @click="openEditServiceModal(service)"
-                            title="Edit service configuration"
-                            aria-label="Edit service"
+                            title="Edit service"
                           >
                             <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
                           </button>
                           <button
                             type="button"
-                            class="btn-icon btn-sm"
+                            class="edex-action-btn btn-danger"
                             @click="confirmDeleteService(service)"
                             title="Delete service"
-                            aria-label="Delete service"
                           >
                             <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
                           </button>
@@ -447,91 +465,187 @@
                     </article>
                   </template>
                 </div>
-              </section>
+              </div>
             </template>
-          </main>
-        </div>
-      </template>
 
-      <!-- 2. Global Incidents Dashboard View -->
-      <template x-if="currentView === 'incidents'">
-        <main class="main-content">
-          <div class="toolbar-row" style="margin-bottom: var(--space-4);">
-            <div>
-              <h1 style="font-size: 1.25rem;">Incident History</h1>
-              <p style="font-size: 0.8125rem; color: var(--text-muted);">
-                System outage tracking, durations, and resolution logs.
-              </p>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: var(--space-4);">
-              <label class="form-checkbox-label">
-                <input type="checkbox" x-model="incidentsOnlyOpen">
-                <span>Show open incidents only</span>
-              </label>
-
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                @click="loadIncidents()"
-                :disabled="loadingIncidents"
-              >
-                <span x-show="loadingIncidents" class="spinner" aria-hidden="true"></span>
-                <svg class="icon" aria-hidden="true" x-show="!loadingIncidents"><use href="#icon-refresh"></use></svg>
-                <span x-text="loadingIncidents ? 'Refreshing...' : 'Refresh'"></span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Incidents Loading Skeletons -->
-          <div x-show="loadingIncidents && incidents.length === 0" class="incidents-container">
-            <div class="skeleton-card" style="height: 100px;"></div>
-            <div class="skeleton-card" style="height: 100px;"></div>
-          </div>
-
-          <!-- Incidents Empty State -->
-          <div x-show="!loadingIncidents && incidents.length === 0" class="empty-state">
-            <div class="empty-icon" style="color: #34d399;"><svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem;"><use href="#icon-check"></use></svg></div>
-            <h2 style="font-size: 1.125rem;">No incidents reported</h2>
-            <p style="font-size: 0.8125rem; color: var(--text-muted);">
-              <span x-text="incidentsOnlyOpen ? 'There are currently no unresolved service outages.' : 'No service outages have occurred.'"></span>
-            </p>
-          </div>
-
-          <!-- Incidents List -->
-          <div x-show="incidents.length > 0" class="incidents-container">
-            <template x-for="inc in incidents" :key="inc.id">
-              <div class="incident-item">
-                <div class="incident-header">
-                  <div style="display: flex; align-items: center; gap: var(--space-3);">
-                    <span
-                      class="status-badge"
-                      :class="inc.isOpen ? 'offline' : 'online'"
+            <!-- 2. Incidents Global Stream View -->
+            <template x-if="currentView === 'incidents'">
+              <div style="display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0;">
+                <div class="edex-toolbar">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button
+                      type="button"
+                      class="edex-filter-btn"
+                      :class="{ 'active': !incidentsOnlyOpen }"
+                      @click="incidentsOnlyOpen = false"
                     >
-                      <span class="status-dot" :class="inc.isOpen ? 'offline' : 'online'"></span>
-                      <span x-text="inc.isOpen ? 'Active Incident' : 'Resolved'"></span>
-                    </span>
-                    <span class="incident-service" x-text="inc.serviceName"></span>
+                      ALL INCIDENTS
+                    </button>
+                    <button
+                      type="button"
+                      class="edex-filter-btn"
+                      :class="{ 'active': incidentsOnlyOpen }"
+                      @click="incidentsOnlyOpen = true"
+                    >
+                      ACTIVE OUTAGES ONLY
+                    </button>
                   </div>
 
-                  <div class="incident-meta">
-                    <span>Started: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.startedAt)"></strong></span>
-                    <span>Duration: <strong style="color: #38bdf8;" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
-                    <span x-show="!inc.isOpen && inc.resolvedAt">
-                      Resolved: <strong style="color: var(--text-bright);" x-text="window.Format.dateTime(inc.resolvedAt)"></strong>
-                    </span>
-                  </div>
+                  <button
+                    type="button"
+                    class="edex-action-btn"
+                    @click="loadIncidents(false)"
+                    :disabled="loadingIncidents"
+                    style="margin-left: auto;"
+                  >
+                    <span x-show="loadingIncidents" class="spinner" aria-hidden="true" style="width: 10px; height: 10px;"></span>
+                    <svg class="icon" aria-hidden="true" x-show="!loadingIncidents"><use href="#icon-refresh"></use></svg>
+                    <span>REFRESH</span>
+                  </button>
                 </div>
 
-                <div class="incident-reason">
-                  <span>Reason: </span>
-                  <span x-text="inc.reason || 'Service probe failed with unexpected error.'"></span>
+                <!-- Empty Incidents State -->
+                <div x-show="!loadingIncidents && incidents.length === 0" class="empty-state" style="margin: auto;">
+                  <div class="empty-icon" style="color: var(--edex-green);"><svg class="icon icon-lg"><use href="#icon-check"></use></svg></div>
+                  <h3 style="font-size: 0.95rem; font-family: var(--font-mono); color: var(--edex-green);">ALL_SYSTEMS_OPERATIONAL</h3>
+                  <p style="font-size: 0.78rem; color: var(--edex-text-muted);">
+                    No outage incidents recorded in telemetry buffer.
+                  </p>
+                </div>
+
+                <!-- Incidents Scrollable Stream -->
+                <div x-show="incidents.length > 0" class="incidents-container" style="overflow-y: auto;">
+                  <template x-for="inc in incidents" :key="inc.id">
+                    <div class="incident-item" style="background: rgba(6, 12, 22, 0.85); border: 1px solid var(--edex-border);">
+                      <div class="incident-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span
+                            class="edex-status-pill"
+                            :class="inc.isOpen ? 'offline' : 'online'"
+                            x-text="inc.isOpen ? '[ONGOING OUTAGE]' : '[RESOLVED]'"
+                          ></span>
+                          <span class="incident-service" x-text="inc.serviceName"></span>
+                        </div>
+
+                        <div class="incident-meta">
+                          <span>DURATION: <strong style="color: var(--edex-cyan);" x-text="window.Format.duration(inc.durationSeconds)"></strong></span>
+                          <span>STARTED: <strong style="color: var(--edex-text-bright);" x-text="window.Format.dateTime(inc.startedAt)"></strong></span>
+                        </div>
+                      </div>
+
+                      <div class="incident-reason" style="background: rgba(2, 6, 12, 0.7); border-left: 3px solid var(--edex-red);">
+                        <span style="color: var(--edex-red); font-weight: 700;">FAIL_CAUSE: </span>
+                        <span x-text="inc.reason || 'Connection timeout / probe check rejected.'"></span>
+                      </div>
+                    </div>
+                  </template>
                 </div>
               </div>
             </template>
           </div>
-        </main>
-      </template>
+        </section>
+
+        <!-- ================= ZONE 3: RIGHT PANEL (PORT MATRIX & LIVE STREAM) ================= -->
+        <aside class="edex-panel edex-right-col" aria-label="Port Matrix and Live Logs">
+          <!-- Subnet Port Matrix -->
+          <div class="edex-panel-header">
+            <span>[03 // PORT_MATRIX]</span>
+            <span style="font-size: 0.62rem; color: var(--edex-text-muted);" x-text="listeningPorts.length + ' PORTS'"></span>
+          </div>
+
+          <div style="padding: 8px; border-bottom: 1px solid var(--edex-border);">
+            <div class="edex-port-table">
+              <template x-for="p in listeningPorts" :key="p.id">
+                <div class="edex-port-row">
+                  <span class="edex-port-num" x-text="':' + p.port"></span>
+                  <span class="edex-port-proto" x-text="p.type"></span>
+                  <span class="edex-port-service" x-text="p.name"></span>
+                  <span class="edex-pulse-led" :style="{ background: p.status === 'Online' ? 'var(--edex-green)' : 'var(--edex-red)', boxShadow: p.status === 'Online' ? '0 0 6px var(--edex-green)' : '0 0 6px var(--edex-red)' }"></span>
+                </div>
+              </template>
+              <div x-show="listeningPorts.length === 0" style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--edex-text-muted); text-align: center; padding: 8px;">
+                NO ACTIVE PORTS
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Streaming Terminal Feed -->
+          <div class="edex-panel-header" style="border-top: 1px solid var(--edex-border); margin-top: 4px;">
+            <span>[04 // PROBE_FEED]</span>
+            <button
+              type="button"
+              style="background: transparent; border: none; font-family: var(--font-mono); font-size: 0.62rem; color: var(--edex-cyan); cursor: pointer;"
+              @click="clearProbeLogs"
+            >
+              [FLUSH]
+            </button>
+          </div>
+
+          <div class="edex-terminal-box">
+            <div class="edex-terminal-lines">
+              <template x-for="log in probeLogs" :key="log.id">
+                <div class="edex-terminal-line" :class="log.type">
+                  <span class="edex-log-time" x-text="'[' + log.time + ']'"></span>
+                  <span x-text="log.text"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </aside>
+
+        <!-- ================= ZONE 4: BOTTOM PANEL (RUNBOOK & ACTION DECK) ================= -->
+        <footer class="edex-bottom-dock" aria-label="Runbook & Action Deck">
+          <!-- Left: Runbook Command Chips -->
+          <div class="edex-runbook-deck">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="edex-dock-label">// RUNBOOK_DECK · CLICK TO COPY</span>
+              <span style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--edex-cyan);">CLIPBOARD READY</span>
+            </div>
+
+            <div class="edex-chips-grid">
+              <template x-for="cmd in quickCommands" :key="cmd.cmd">
+                <button
+                  type="button"
+                  class="edex-chip"
+                  :class="{ 'copied': copiedQuickCmd === cmd.cmd }"
+                  @click="copyQuickCommand(cmd.cmd)"
+                  :title="cmd.cmd"
+                >
+                  <span class="edex-chip-label" x-text="'[' + cmd.label + ']'"></span>
+                  <span x-text="copiedQuickCmd === cmd.cmd ? 'COPIED // 0x01' : cmd.cmd"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Right: Tactical Control Keypad -->
+          <div class="edex-keypad">
+            <span class="edex-dock-label">// TACTICAL_KEYPAD</span>
+            <div class="edex-keypad-grid">
+              <button type="button" class="edex-key-btn primary" @click="openCreateServiceModal">
+                <svg class="icon"><use href="#icon-plus"></use></svg>
+                <span>+ NODE</span>
+              </button>
+
+              <button type="button" class="edex-key-btn" @click="checkAllServices" :disabled="isCheckingAll">
+                <span x-show="isCheckingAll" class="spinner" aria-hidden="true" style="width: 10px; height: 10px;"></span>
+                <svg class="icon" aria-hidden="true" x-show="!isCheckingAll"><use href="#icon-bolt"></use></svg>
+                <span x-text="isCheckingAll ? 'SWEEPING' : 'SWEEP ALL'"></span>
+              </button>
+
+              <button type="button" class="edex-key-btn" @click="openCategoryModal">
+                <svg class="icon"><use href="#icon-tag"></use></svg>
+                <span>CLUSTERS</span>
+              </button>
+
+              <button type="button" class="edex-key-btn" @click="openBackupModal">
+                <svg class="icon"><use href="#icon-download"></use></svg>
+                <span>BACKUP</span>
+              </button>
+            </div>
+          </div>
+        </footer>
+      </main>
 
       <!-- 3. Service Detail Side Panel (Flyout Drawer) -->
       <div
