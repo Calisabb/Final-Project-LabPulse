@@ -1461,6 +1461,41 @@
   color: var(--edex-cyan);
 }
 
+.edex-sfx-toggle-btn {
+  background: rgba(3, 8, 15, 0.85);
+  border: 1px solid var(--edex-border);
+  color: var(--edex-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.edex-sfx-toggle-btn:hover {
+  border-color: var(--edex-cyan);
+  color: var(--edex-text-bright);
+}
+
+.edex-sfx-toggle-btn.active {
+  border-color: rgba(0, 255, 136, 0.4);
+  color: var(--edex-text-bright);
+}
+
+.edex-sfx-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
 /* Master Grid Viewport */
 .edex-grid {
   display: grid;

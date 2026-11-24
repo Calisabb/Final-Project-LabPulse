@@ -77,6 +77,14 @@ document.addEventListener('alpine:init', () => {
     },
     serviceFormErrors: {},
 
+    // Audio SFX Engine State
+    sfxEnabled: window.Sound ? window.Sound.isEnabled : true,
+    toggleSfx() {
+      if (window.Sound) {
+        this.sfxEnabled = window.Sound.toggle();
+      }
+    },
+
     // Cyber Deletion Confirmation Modal
     isDeleteModalOpen: false,
     deleteModalType: 'service', // 'service' | 'category' | 'runbook'
@@ -293,6 +301,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await navigator.clipboard.writeText(cmd);
         this.copiedQuickCmd = cmd;
+        if (window.Sound) window.Sound.copy();
         Alpine.store('toasts').show(`Copied: ${cmd.length > 40 ? cmd.slice(0, 40) + '...' : cmd}`, 'info', 2000);
         setTimeout(() => {
           if (this.copiedQuickCmd === cmd) {
@@ -499,6 +508,7 @@ document.addEventListener('alpine:init', () => {
       if (!service || !service.id) return;
       const id = service.id;
 
+      if (window.Sound) window.Sound.ping();
       this.checkingServiceIds = { ...this.checkingServiceIds, [id]: true };
 
       try {
@@ -544,6 +554,7 @@ document.addEventListener('alpine:init', () => {
     async checkAllServices() {
       if (this.isCheckingAll) return;
       this.isCheckingAll = true;
+      if (window.Sound) window.Sound.sweep();
 
       try {
         const res = await window.Api.checkAll();
@@ -853,6 +864,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await navigator.clipboard.writeText(runbook.commandText);
         this.copiedRunbookId = runbook.id;
+        if (window.Sound) window.Sound.copy();
         setTimeout(() => {
           if (this.copiedRunbookId === runbook.id) {
             this.copiedRunbookId = null;
@@ -1041,6 +1053,7 @@ document.addEventListener('alpine:init', () => {
       this.deleteModalTarget = service;
       this.serviceToDelete = service;
       this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
     },
 
     confirmDeleteCategory(cat) {
@@ -1048,6 +1061,7 @@ document.addEventListener('alpine:init', () => {
       this.deleteModalType = 'category';
       this.deleteModalTarget = cat;
       this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
     },
 
     confirmDeleteRunbook(runbook) {
@@ -1055,6 +1069,7 @@ document.addEventListener('alpine:init', () => {
       this.deleteModalType = 'runbook';
       this.deleteModalTarget = runbook;
       this.isDeleteModalOpen = true;
+      if (window.Sound) window.Sound.warn();
     },
 
     closeDeleteModal() {
@@ -1087,6 +1102,7 @@ document.addEventListener('alpine:init', () => {
         if (this.selectedService && this.selectedService.id === id) {
           this.closeServicePanel();
         }
+        if (window.Sound) window.Sound.purge();
         Alpine.store('toasts').show(`Service "${name}" purged`, 'info');
         this.closeDeleteModal();
       } catch (err) {
@@ -1111,6 +1127,7 @@ document.addEventListener('alpine:init', () => {
           this.cancelCategoryEdit();
         }
         await this.loadServices(false);
+        if (window.Sound) window.Sound.purge();
         Alpine.store('toasts').show(`Category "${cat.name}" purged`, 'info');
         this.closeDeleteModal();
       } catch (err) {
@@ -1128,6 +1145,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await window.Api.deleteRunbook(rb.id);
         this.serviceRunbooks = this.serviceRunbooks.filter(r => r.id !== rb.id);
+        if (window.Sound) window.Sound.purge();
         Alpine.store('toasts').show(`Runbook "${rb.title}" purged`, 'info');
         this.closeDeleteModal();
       } catch (err) {

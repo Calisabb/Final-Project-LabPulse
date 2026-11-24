@@ -8,16 +8,17 @@
   <title>LabPulse · Homelab Operations</title>
 
   <!-- Local Vendored Stylesheets -->
-  <link rel="stylesheet" href="css/tokens.css?v=9">
-  <link rel="stylesheet" href="css/base.css?v=9">
-  <link rel="stylesheet" href="css/components.css?v=9">
+  <link rel="stylesheet" href="css/tokens.css?v=10">
+  <link rel="stylesheet" href="css/base.css?v=10">
+  <link rel="stylesheet" href="css/components.css?v=10">
 
   <!-- Local Vendored Application Scripts -->
   <script src="vendor/alpine.min.js" defer></script>
-  <script src="js/format.js?v=9"></script>
-  <script src="js/auth.js?v=9"></script>
-  <script src="js/api.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/sound.js?v=10"></script>
+  <script src="js/format.js?v=10"></script>
+  <script src="js/auth.js?v=10"></script>
+  <script src="js/api.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
 </head>
 <body x-data="app" class="app-reveal" x-cloak>
 
@@ -177,6 +178,17 @@
         <div class="edex-topbar-meta">
           <span>OPERATOR: <strong x-text="userName"></strong></span>
           <span>SESSION: <strong x-text="sessionUptimeFormatted"></strong></span>
+          <button
+            type="button"
+            class="edex-sfx-toggle-btn"
+            :class="{ 'active': sfxEnabled }"
+            @click="toggleSfx"
+            :title="sfxEnabled ? 'Mute terminal audio' : 'Enable terminal audio'"
+            aria-label="Toggle SFX"
+          >
+            <span class="edex-sfx-led" :style="{ background: sfxEnabled ? 'var(--edex-green)' : 'var(--edex-text-muted)', boxShadow: sfxEnabled ? '0 0 6px var(--edex-green)' : 'none' }"></span>
+            <span x-text="sfxEnabled ? 'SFX: ON' : 'SFX: OFF'"></span>
+          </button>
           <button
             type="button"
             class="btn-icon btn-sm"
