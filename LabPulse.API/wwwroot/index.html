@@ -8,16 +8,16 @@
   <title>LabPulse · Homelab Operations</title>
 
   <!-- Local Vendored Stylesheets -->
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/tokens.css?v=2">
+  <link rel="stylesheet" href="css/base.css?v=2">
+  <link rel="stylesheet" href="css/components.css?v=2">
 
   <!-- Local Vendored Application Scripts -->
   <script src="vendor/alpine.min.js" defer></script>
-  <script src="js/format.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/format.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </head>
 <body x-data="app" class="app-reveal" x-cloak>
 
@@ -48,6 +48,9 @@
     <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
     <symbol id="icon-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
     <symbol id="icon-broadcast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="icon-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
   </svg>
 
   <!-- Toast Notification Stack -->
@@ -170,6 +173,28 @@
               <span x-show="isCheckingAll" class="spinner" aria-hidden="true"></span>
               <svg class="icon" aria-hidden="true" x-show="!isCheckingAll"><use href="#icon-bolt"></use></svg>
               <span x-text="isCheckingAll ? 'Checking all...' : 'Check all'"></span>
+            </button>
+
+            <!-- Manage Categories Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="openCategoryModal"
+              aria-label="Manage categories"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#icon-tag"></use></svg>
+              <span>Categories</span>
+            </button>
+
+            <!-- JSON Backup Button -->
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              @click="openBackupModal"
+              aria-label="Backup and restore"
+            >
+              <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+              <span>Backup</span>
             </button>
 
             <!-- Add Service Button -->
@@ -1177,6 +1202,289 @@
             <button type="button" class="btn btn-danger" @click="executeDeleteService" :disabled="deletingService">
               <span x-show="deletingService" class="spinner" aria-hidden="true"></span>
               <span x-text="deletingService ? 'Deleting...' : 'Delete Service'"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Categories Modal -->
+      <div
+        x-show="isCategoryModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeCategoryModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="category-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 600px;" @click.outside="closeCategoryModal">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg class="icon" aria-hidden="true" style="color: var(--brand-accent);"><use href="#icon-tag"></use></svg>
+              <h2 id="category-modal-title" style="font-size: 1.125rem;">Manage Categories</h2>
+            </div>
+            <button type="button" class="btn-icon btn-sm" @click="closeCategoryModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Add / Edit Category Form -->
+            <form @submit.prevent="saveCategory" class="category-edit-box">
+              <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2); color: var(--text-bright);" x-text="isCategoryEditMode ? 'Edit Category' : 'Create New Category'"></h3>
+              
+              <div class="form-row-2">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="cat-name" class="form-label">Category Name *</label>
+                  <input
+                    id="cat-name"
+                    type="text"
+                    class="form-input"
+                    x-model="categoryForm.name"
+                    placeholder="e.g. Databases, Media, Gateways"
+                    maxlength="50"
+                    required
+                  >
+                  <span x-show="categoryFormErrors.name" class="form-error" x-text="categoryFormErrors.name"></span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="cat-color" class="form-label">Color Hex (#RRGGBB) *</label>
+                  <div style="display: flex; gap: var(--space-2); align-items: center;">
+                    <input
+                      id="cat-color"
+                      type="text"
+                      class="form-input"
+                      x-model="categoryForm.color"
+                      placeholder="#38bdf8"
+                      maxlength="7"
+                      pattern="^#([0-9a-fA-F]{6})$"
+                      required
+                    >
+                    <input
+                      type="color"
+                      aria-label="Pick color"
+                      x-model="categoryForm.color"
+                      class="color-picker-input"
+                    >
+                  </div>
+                  <span x-show="categoryFormErrors.color" class="form-error" x-text="categoryFormErrors.color"></span>
+                </div>
+              </div>
+
+              <!-- Color Presets -->
+              <div style="margin-top: var(--space-2);">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: var(--space-1);">Preset Palette:</span>
+                <div class="color-presets-row">
+                  <template x-for="preset in categoryColorPresets" :key="preset">
+                    <button
+                      type="button"
+                      class="color-preset-dot"
+                      :style="'background-color: ' + preset"
+                      :class="{ 'active': categoryForm.color.toLowerCase() === preset.toLowerCase() }"
+                      @click="selectCategoryColor(preset)"
+                      :aria-label="'Select color ' + preset"
+                    ></button>
+                  </template>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: var(--space-2); justify-content: flex-end; margin-top: var(--space-3);">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  x-show="isCategoryEditMode"
+                  @click="cancelCategoryEdit"
+                >
+                  Cancel Edit
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm" :disabled="savingCategory">
+                  <span x-show="savingCategory" class="spinner" aria-hidden="true"></span>
+                  <span x-text="savingCategory ? 'Saving...' : (isCategoryEditMode ? 'Update Category' : 'Add Category')"></span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Existing Categories List -->
+            <div style="margin-top: var(--space-4);">
+              <h3 style="font-size: 0.875rem; margin-bottom: var(--space-2); color: var(--text-muted);">Existing Categories</h3>
+              
+              <div class="categories-list">
+                <template x-if="categories.length === 0">
+                  <p style="font-size: 0.8125rem; color: var(--text-muted); text-align: center; padding: var(--space-3);">No categories found.</p>
+                </template>
+
+                <template x-for="cat in categories" :key="cat.id">
+                  <div class="category-list-item">
+                    <div style="display: flex; align-items: center; gap: var(--space-2); min-width: 0;">
+                      <span class="category-color-badge" :style="'background-color: ' + cat.color"></span>
+                      <strong class="category-name-text" x-text="cat.name"></strong>
+                      <span class="category-color-hex" x-text="cat.color"></span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: var(--space-1);">
+                      <button
+                        type="button"
+                        class="btn-icon btn-sm"
+                        @click="editCategory(cat)"
+                        aria-label="Edit category"
+                        title="Edit"
+                      >
+                        <svg class="icon" aria-hidden="true"><use href="#icon-pencil"></use></svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-icon btn-sm btn-icon-danger"
+                        @click="deleteCategory(cat)"
+                        :disabled="deletingCategoryId === cat.id"
+                        aria-label="Delete category"
+                        title="Delete"
+                      >
+                        <span x-show="deletingCategoryId === cat.id" class="spinner" aria-hidden="true"></span>
+                        <svg class="icon" aria-hidden="true" x-show="deletingCategoryId !== cat.id"><use href="#icon-trash"></use></svg>
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeCategoryModal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup & Restore Modal -->
+      <div
+        x-show="isBackupModalOpen"
+        class="modal-backdrop"
+        @keydown.escape.window="closeBackupModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="backup-modal-title"
+      >
+        <div class="modal-dialog" style="max-width: 540px;" @click.outside="closeBackupModal">
+          <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <svg class="icon" aria-hidden="true" style="color: var(--brand-accent);"><use href="#icon-download"></use></svg>
+              <h2 id="backup-modal-title" style="font-size: 1.125rem;">JSON Backup & Restore</h2>
+            </div>
+            <button type="button" class="btn-icon btn-sm" @click="closeBackupModal" aria-label="Close dialog">
+              <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Export Section -->
+            <div class="backup-section-card">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);">
+                <div>
+                  <h3 style="font-size: 0.9375rem; margin-bottom: var(--space-1); color: var(--text-bright);">Export Configuration</h3>
+                  <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">
+                    Download all categories, monitored services, and runbooks as a portable JSON snapshot.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="white-space: nowrap; flex-shrink: 0;"
+                  @click="downloadBackup"
+                  :disabled="exportingBackup"
+                >
+                  <span x-show="exportingBackup" class="spinner" aria-hidden="true"></span>
+                  <svg class="icon" aria-hidden="true" x-show="!exportingBackup"><use href="#icon-download"></use></svg>
+                  <span x-text="exportingBackup ? 'Exporting...' : 'Export JSON'"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Import Section -->
+            <div class="backup-section-card" style="margin-top: var(--space-3);">
+              <h3 style="font-size: 0.9375rem; margin-bottom: var(--space-1); color: var(--text-bright);">Import & Merge Configuration</h3>
+              <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: var(--space-3);">
+                Upload a JSON backup file. Existing services and categories are safely merged without overwriting your IDs.
+              </p>
+
+              <div class="file-picker-box">
+                <input
+                  id="backup-file-input"
+                  type="file"
+                  accept=".json,application/json"
+                  style="display: none;"
+                  @change="handleBackupFileSelect"
+                >
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);">
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick="document.getElementById('backup-file-input').click()"
+                  >
+                    <svg class="icon" aria-hidden="true"><use href="#icon-upload"></use></svg> Choose File...
+                  </button>
+                  <span
+                    style="font-size: 0.8125rem; color: var(--text-muted); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;"
+                    x-text="importFileName ? importFileName : 'No file chosen'"
+                  ></span>
+                </div>
+              </div>
+
+              <!-- Error message -->
+              <div x-show="backupError" x-transition class="form-error" style="margin-top: var(--space-2);" x-text="backupError"></div>
+
+              <!-- Import Action Button -->
+              <div style="margin-top: var(--space-3); display: flex; justify-content: flex-end;">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  @click="executeImportBackup"
+                  :disabled="!importFile || importingBackup"
+                >
+                  <span x-show="importingBackup" class="spinner" aria-hidden="true"></span>
+                  <svg class="icon" aria-hidden="true" x-show="!importingBackup"><use href="#icon-upload"></use></svg>
+                  <span x-text="importingBackup ? 'Merging data...' : 'Import & Restore'"></span>
+                </button>
+              </div>
+
+              <!-- Import Result Statistics -->
+              <template x-if="importResult">
+                <div class="import-result-stats" x-transition>
+                  <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);">
+                    <svg class="icon" aria-hidden="true" style="color: var(--status-online);"><use href="#icon-check"></use></svg>
+                    <strong style="font-size: 0.875rem; color: var(--text-bright);">Import Completed</strong>
+                  </div>
+                  <div class="result-grid">
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.categoriesAdded"></span>
+                      <span class="stat-label">Categories Added</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.categoriesSkipped"></span>
+                      <span class="stat-label">Categories Skipped</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.servicesAdded"></span>
+                      <span class="stat-label">Services Added</span>
+                    </div>
+                    <div class="result-stat-item">
+                      <span class="stat-num" x-text="importResult.servicesSkipped"></span>
+                      <span class="stat-label">Services Skipped</span>
+                    </div>
+                    <div class="result-stat-item" style="grid-column: span 2;">
+                      <span class="stat-num" x-text="importResult.runbooksAdded"></span>
+                      <span class="stat-label">Runbooks Added</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeBackupModal">
+              Close
             </button>
           </div>
         </div>

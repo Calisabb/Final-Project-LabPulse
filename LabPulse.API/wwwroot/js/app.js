@@ -82,6 +82,28 @@ document.addEventListener('alpine:init', () => {
     serviceToDelete: null,
     deletingService: false,
 
+    // Category CRUD Modal State
+    isCategoryModalOpen: false,
+    isCategoryEditMode: false,
+    savingCategory: false,
+    deletingCategoryId: null,
+    categoryForm: {
+      id: null,
+      name: '',
+      color: '#38bdf8'
+    },
+    categoryFormErrors: {},
+    categoryColorPresets: ['#38bdf8', '#34d399', '#a78bfa', '#f472b6', '#fbbf24', '#fb7185', '#a3e635', '#818cf8'],
+
+    // Backup & Restore Modal State
+    isBackupModalOpen: false,
+    exportingBackup: false,
+    importingBackup: false,
+    importFile: null,
+    importFileName: '',
+    importResult: null,
+    backupError: '',
+
     // Service Detail Side Panel State
     isPanelOpen: false,
     selectedService: null,
@@ -933,6 +955,228 @@ document.addEventListener('alpine:init', () => {
         Alpine.store('toasts').show(`Failed to delete service: ${err.message}`, 'error');
       } finally {
         this.deletingService = false;
+      }
+    },
+
+    /* ------------------- Category CRUD ------------------- */
+    openCategoryModal() {
+      this.isCategoryModalOpen = true;
+      this.cancelCategoryEdit();
+      this.loadCategories();
+    },
+
+    closeCategoryModal() {
+      this.isCategoryModalOpen = false;
+      this.cancelCategoryEdit();
+    },
+
+    selectCategoryColor(color) {
+      this.categoryForm.color = color;
+      if (this.categoryFormErrors.color) {
+        delete this.categoryFormErrors.color;
+      }
+    },
+
+    editCategory(cat) {
+      this.isCategoryEditMode = true;
+      this.categoryForm = {
+        id: cat.id,
+        name: cat.name,
+        color: cat.color
+      };
+      this.categoryFormErrors = {};
+    },
+
+    cancelCategoryEdit() {
+      this.isCategoryEditMode = false;
+      this.categoryForm = {
+        id: null,
+        name: '',
+        color: '#38bdf8'
+      };
+      this.categoryFormErrors = {};
+    },
+
+    async saveCategory() {
+      this.categoryFormErrors = {};
+      const name = (this.categoryForm.name || '').trim();
+      const color = (this.categoryForm.color || '').trim();
+
+      // Client-side validation
+      if (!name) {
+        this.categoryFormErrors.name = 'Category name is required';
+      } else if (name.length > 50) {
+        this.categoryFormErrors.name = 'Maximum length is 50 characters';
+      }
+
+      const hexRegex = /^#([0-9a-fA-F]{6})$/;
+      if (!color) {
+        this.categoryFormErrors.color = 'Color is required';
+      } else if (!hexRegex.test(color)) {
+        this.categoryFormErrors.color = 'Color must be in hex format #RRGGBB';
+      }
+
+      if (Object.keys(this.categoryFormErrors).length > 0) {
+        return;
+      }
+
+      this.savingCategory = true;
+      try {
+        if (this.isCategoryEditMode) {
+          const updated = await window.Api.updateCategory(this.categoryForm.id, { name, color });
+          const index = this.categories.findIndex(c => c.id === updated.id);
+          if (index !== -1) {
+            this.categories.splice(index, 1, updated);
+          }
+          Alpine.store('toasts').show(`Category "${name}" updated`, 'info');
+        } else {
+          const created = await window.Api.createCategory({ name, color });
+          this.categories.push(created);
+          Alpine.store('toasts').show(`Category "${name}" created`, 'info');
+        }
+
+        // Refresh services so category badges reflect updated names/colors
+        this.refreshServicesSilently();
+        this.cancelCategoryEdit();
+      } catch (err) {
+        if (err.errors) {
+          const nameErr = err.getFieldError('name');
+          const colorErr = err.getFieldError('color');
+          if (nameErr) this.categoryFormErrors.name = nameErr;
+          if (colorErr) this.categoryFormErrors.color = colorErr;
+        }
+        Alpine.store('toasts').show(err.message || 'Failed to save category', 'error');
+      } finally {
+        this.savingCategory = false;
+      }
+    },
+
+    async deleteCategory(cat) {
+      if (!cat) return;
+      if (!confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
+        return;
+      }
+
+      this.deletingCategoryId = cat.id;
+      try {
+        await window.Api.deleteCategory(cat.id);
+        this.categories = this.categories.filter(c => c.id !== cat.id);
+        if (this.selectedCategory === cat.id) {
+          this.selectedCategory = null;
+        }
+        // If we were editing this category, reset form
+        if (this.isCategoryEditMode && this.categoryForm.id === cat.id) {
+          this.cancelCategoryEdit();
+        }
+        Alpine.store('toasts').show(`Category "${cat.name}" deleted`, 'info');
+      } catch (err) {
+        Alpine.store('toasts').show(err.message || 'Cannot delete category', 'error');
+      } finally {
+        this.deletingCategoryId = null;
+      }
+    },
+
+    /* ------------------- Backup & Restore ------------------- */
+    openBackupModal() {
+      this.isBackupModalOpen = true;
+      this.importFile = null;
+      this.importFileName = '';
+      this.importResult = null;
+      this.backupError = '';
+    },
+
+    closeBackupModal() {
+      this.isBackupModalOpen = false;
+      this.importFile = null;
+      this.importFileName = '';
+      this.importResult = null;
+      this.backupError = '';
+    },
+
+    async downloadBackup() {
+      this.exportingBackup = true;
+      try {
+        const backupData = await window.Api.exportBackup();
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `labpulse-backup-${timestamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        Alpine.store('toasts').show('Backup exported and downloaded successfully', 'info');
+      } catch (err) {
+        Alpine.store('toasts').show(`Export failed: ${err.message}`, 'error');
+      } finally {
+        this.exportingBackup = false;
+      }
+    },
+
+    handleBackupFileSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      this.backupError = '';
+      this.importResult = null;
+
+      if (!file) {
+        this.importFile = null;
+        this.importFileName = '';
+        return;
+      }
+
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        this.backupError = 'Please select a valid JSON backup file (.json)';
+        this.importFile = null;
+        this.importFileName = '';
+        return;
+      }
+
+      this.importFile = file;
+      this.importFileName = file.name;
+    },
+
+    async executeImportBackup() {
+      if (!this.importFile) {
+        this.backupError = 'Select a JSON file to import';
+        return;
+      }
+
+      this.importingBackup = true;
+      this.backupError = '';
+      this.importResult = null;
+
+      try {
+        const text = await this.importFile.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          throw new Error('Selected file is not valid JSON');
+        }
+
+        const result = await window.Api.importBackup(parsed);
+        this.importResult = result;
+
+        Alpine.store('toasts').show(
+          `Import complete: ${result.servicesAdded} services added, ${result.categoriesAdded} categories added`,
+          'info'
+        );
+
+        // Reload fresh data from backend
+        await Promise.all([
+          this.loadCategories(),
+          this.loadServices()
+        ]);
+      } catch (err) {
+        this.backupError = err.message || 'Import failed. Check file format.';
+        Alpine.store('toasts').show(this.backupError, 'error');
+      } finally {
+        this.importingBackup = false;
       }
     }
   }));

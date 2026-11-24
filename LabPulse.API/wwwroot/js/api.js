@@ -157,6 +157,26 @@ const Api = {
     return await this.request('/api/Categories');
   },
 
+  async createCategory(dto) {
+    return await this.request('/api/Categories', {
+      method: 'POST',
+      body: JSON.stringify(dto)
+    });
+  },
+
+  async updateCategory(id, dto) {
+    return await this.request(`/api/Categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dto)
+    });
+  },
+
+  async deleteCategory(id) {
+    return await this.request(`/api/Categories/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
   /* ------------------- Monitored Services ------------------- */
   async getServices(params = {}) {
     const query = new URLSearchParams();
@@ -268,6 +288,18 @@ const Api = {
 
   async getServiceUptime(serviceId, days = 30) {
     return await this.request(`/api/services/${serviceId}/uptime?days=${days}`);
+  },
+
+  /* ------------------- Backup & Restore ------------------- */
+  async exportBackup() {
+    return await this.request('/api/Backup/export');
+  },
+
+  async importBackup(backupDto) {
+    return await this.request('/api/Backup/import', {
+      method: 'POST',
+      body: JSON.stringify(backupDto)
+    });
   }
 };
 
